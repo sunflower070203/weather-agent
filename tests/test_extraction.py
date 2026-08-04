@@ -1,0 +1,54 @@
+import unittest
+from datetime import datetime
+
+from weather_agent.activity import ActivityPlan
+from weather_agent.extraction import ActivityExtractor, ActivityExtractionError
+
+
+class ActivityExtractorTests(unittest.TestCase):
+    def test_applies_only_allowed_structured_updates(self):
+        model = _FakeModel(
+            {
+                "activity_type": "cycling",
+                "location": "北京奥森公园",
+                "start_time": "2026-08-06T08:00:00+08:00",
+                "duration_hours": 3,
+                "weather": "sunny",
+            }
+        )
+        extractor = ActivityExtractor(model)
+
+        updated = extractor.update_plan(
+            ActivityPlan(),
+            "后天早上八点去北京奥森骑行三小时",
+            now=datetime.fromisoformat("2026-08-04T10:00:00+08:00"),
+        )
+
+        self.assertEqual(updated.activity_type, "cycling")
+        self.assertEqual(updated.location, "北京奥森公园")
+        self.assertEqual(updated.duration_hours, 3.0)
+        self.assertFalse(hasattr(updated, "weather"))
+
+    def test_rejects_model_value_that_breaks_activity_validation(self):
+        extractor = ActivityExtractor(_FakeModel({"activity_type": "swimming"}))
+
+        with self.assertRaisesRegex(ActivityExtractionError, "invalid update"):
+            extractor.update_plan(
+                ActivityPlan(),
+                "去游泳",
+                now=datetime.fromisoformat("2026-08-04T10:00:00+08:00"),
+            )
+
+
+class _FakeModel:
+    def __init__(self, result):
+        self.result = result
+        self.messages = None
+
+    def complete_json(self, messages):
+        self.messages = messages
+        return self.result
+
+
+if __name__ == "__main__":
+    unittest.main()

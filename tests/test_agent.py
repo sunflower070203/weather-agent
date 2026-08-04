@@ -1,0 +1,173 @@
+import unittest
+from dataclasses import replace
+from datetime import datetime, timedelta, timezone
+
+from weather_agent.activity import ActivityPlan
+from weather_agent.forecast import WeatherPoint
+from weather_agent.geocoding import LocationCandidate
+
+
+BEIJING_TZ = timezone(timedelta(hours=8))
+START = datetime(2026, 8, 6, 8, 0, tzinfo=BEIJING_TZ)
+
+
+class FakeExtractor:
+    def __init__(self, plans):
+        self.plans = iter(plans)
+
+    def update_plan(self, plan, user_message, *, now):
+        return next(self.plans)
+
+
+class FakeGeocoder:
+    def __init__(self, candidates):
+        self.candidates = candidates
+        self.queries = []
+
+    def search(self, query):
+        self.queries.append(query)
+        return self.candidates
+
+
+class FakeWeather:
+    def __init__(self, payload=None, error=None):
+        self.payload = payload
+        self.error = error
+        self.calls = []
+
+    def fetch(self, *, longitude, latitude):
+        self.calls.append((longitude, latitude))
+        if self.error:
+            raise self.error
+        return self.payload
+
+
+def candidate(name, latitude, longitude, admin1):
+    return LocationCandidate(name, latitude, longitude, "中国", admin1, "Asia/Shanghai")
+
+
+def forecast_payload(*, rain=0.0, wind=2.0, temperature=25.0):
+    return {
+        "time_init": "2026-08-04T08:00:00+08:00",
+        "data": [
+            {
+                "time": "2026-08-06T08:00:00+08:00",
+                "wd10m": 180,
+                "ws10m": wind,
+                "t2m": temperature,
+                "rh2m": 60,
+                "psz": 100000,
+                "tp": rain,
+            }
+        ],
+    }
+
+
+class WeatherAgentTests(unittest.TestCase):
+    def test_asks_next_question_without_calling_tools_when_plan_is_incomplete(self):
+        from weather_agent.agent import WeatherAgent
+
+        extractor = FakeExtractor([ActivityPlan(activity_type="cycling")])
+        geocoder = FakeGeocoder(())
+        weather = FakeWeather()
+
+        result = WeatherAgent(extractor, geocoder, weather).handle_message(
+            "我想骑行", now=START
+        )
+
+        self.assertEqual(result.kind, "question")
+        self.assertEqual(result.message, "活动地点在哪里？")
+        self.assertEqual(geocoder.queries, [])
+        self.assertEqual(weather.calls, [])
+
+    def test_requests_confirmation_when_location_has_multiple_candidates(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "奥森公园", START, 3)
+        candidates = (
+            candidate("奥林匹克森林公园", 40.02, 116.39, "北京"),
+            candidate("奥林森林公园", 41.10, 123.00, "辽宁"),
+        )
+        agent = WeatherAgent(
+            FakeExtractor([plan]), FakeGeocoder(candidates), FakeWeather()
+        )
+
+        result = agent.handle_message("后天去奥森公园骑行三小时", now=START)
+
+        self.assertEqual(result.kind, "location_choice")
+        self.assertEqual(result.candidates, candidates)
+        self.assertIn("1.", result.message)
+        self.assertIn("2.", result.message)
+
+    def test_confirmed_location_runs_weather_and_reports_rule_based_risk(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "奥森公园", START, 3)
+        place = candidate("奥林匹克森林公园", 40.02, 116.39, "北京")
+        weather = FakeWeather(forecast_payload(rain=3.0))
+        agent = WeatherAgent(FakeExtractor([plan]), FakeGeocoder((place,)), weather)
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertEqual(result.kind, "recommendation")
+        self.assertEqual(weather.calls, [(116.39, 40.02)])
+        self.assertEqual(result.risks[0].kind, "precipitation")
+        self.assertEqual(result.risks[0].level, "medium")
+        self.assertIn("方案一", result.message)
+        self.assertIn("方案二", result.message)
+        self.assertIn("3.0 mm/hr", result.message)
+
+    def test_numeric_location_choice_uses_selected_candidate(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "奥森公园", START, 3)
+        first = candidate("奥林匹克森林公园", 40.02, 116.39, "北京")
+        second = candidate("奥林森林公园", 41.10, 123.00, "辽宁")
+        weather = FakeWeather(forecast_payload())
+        agent = WeatherAgent(
+            FakeExtractor([plan]), FakeGeocoder((first, second)), weather
+        )
+
+        agent.handle_message("完整计划", now=START)
+        result = agent.handle_message("2", now=START)
+
+        self.assertEqual(result.kind, "recommendation")
+        self.assertEqual(weather.calls, [(123.00, 41.10)])
+
+    def test_weather_failure_returns_safe_error_without_recommendation(self):
+        from weather_agent.agent import WeatherAgent
+        from weather_agent.tjweather import TJWeatherError
+
+        plan = ActivityPlan("hiking", "香山", START, 2)
+        place = candidate("香山", 39.99, 116.18, "北京")
+        weather = FakeWeather(error=TJWeatherError("timeout"))
+        agent = WeatherAgent(FakeExtractor([plan]), FakeGeocoder((place,)), weather)
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertEqual(result.kind, "error")
+        self.assertIn("无法获取天气数据", result.message)
+        self.assertNotIn("适合", result.message)
+
+    def test_marks_city_level_coordinates_as_approximate(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京奥林匹克森林公园", START, 3)
+        place = replace(
+            candidate("北京", 39.91, 116.40, "北京市"),
+            resolved_query="北京",
+            is_approximate=True,
+        )
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(forecast_payload()),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertIn("城市级近似", result.message)
+
+
+if __name__ == "__main__":
+    unittest.main()
