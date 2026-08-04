@@ -9,6 +9,13 @@ NOW = datetime(2026, 8, 4, 14, 0, tzinfo=timezone(timedelta(hours=8)))
 
 
 class UIAdapterTests(unittest.TestCase):
+    def test_build_app_returns_gradio_blocks(self):
+        import gradio as gr
+
+        from weather_agent.ui import build_app
+
+        self.assertIsInstance(build_app(), gr.Blocks)
+
     def test_blank_message_does_not_call_agent(self):
         from weather_agent.ui import respond
 
