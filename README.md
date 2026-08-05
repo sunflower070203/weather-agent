@@ -277,8 +277,8 @@ ActivityPlan
 | ActivityPlan | 已完成 | 状态更新、缺失字段追问、输入校验测试通过 | 无 |
 | Agent 主循环 | 已完成 | 追问、地点消歧、天气查询、风险判断及降级场景测试通过 | 待接入 Gradio 会话界面 |
 | 风险规则 | 已完成 | 解析、时段筛选和四类风险共5项测试通过 | 当前阈值为透明产品口径，后续可校准 |
-| Gradio 界面 | 未开始 | - | 依赖核心流程 |
-| 自动化测试 | 进行中 | 当前30项单元及 Agent 场景测试通过 | 待加入 Gradio 界面测试 |
+| Gradio 界面 | 已完成 | 本机 HTTP 200；真实对话、地点确认、重置和移动布局验收通过 | 待部署后复验 |
+| 自动化测试 | 进行中 | 当前35项单元、Agent 场景及 UI 适配测试通过 | 待增加线上冒烟测试 |
 | ModelScope 部署 | 进行中 | 已创建公开空间 `sunh0203/outdoor-weather-agent` | 尚未上传文件、配置密钥和首次部署 |
 | 演示与提交材料 | 未开始 | - | 依赖可运行版本 |
 
@@ -366,3 +366,40 @@ ActivityPlan
 - 发现的问题：Open-Meteo 不识别公园等多数 POI，只能可靠查询城市；
 - 做出的关键决策：当具体地点明确包含北京、天津、上海或重庆时，允许降级到城市坐标，并在结果中标注“城市级近似”，其他未知地点不自动猜测；
 - 下一阶段：增加 Gradio 会话界面，随后部署到已创建的 ModelScope 创空间。
+
+### 2026-08-04 / Gradio 会话界面
+
+- 本阶段目标：将 Agent 内核封装成可在 ModelScope 创空间运行的中文对话页面；
+- 实际完成：实现独立会话状态、聊天记录、计划摘要、示例输入、重置操作和响应式布局；
+- 验证方式与结果：35项自动化测试通过；本机首页返回 HTTP 200；浏览器真实完成“活动描述 → 地点选择 → 天气建议 → 重置”；720px 宽度切换为单列；
+- 发现的问题：Gradio 6 已移除 `Chatbot(type="messages")`，并要求在 `launch()` 而非 `Blocks` 中传入主题和 CSS；
+- 做出的关键决策：固定 `gradio==6.22.0`，每个浏览器会话通过 `gr.State` 延迟创建独立 Agent；
+- 下一阶段：把代码同步到 ModelScope 创空间，配置三个密钥并执行线上复验。
+
+## 12. 本地运行与部署
+
+### 12.1 本地运行
+
+在项目根目录的 PowerShell 中执行：
+
+```powershell
+py -m pip install -r requirements.txt
+py -m unittest discover -s tests -v
+py app.py
+```
+
+然后访问 `http://127.0.0.1:7860`。应用默认监听 `0.0.0.0:7860`，便于容器和 ModelScope 创空间访问。
+
+### 12.2 必需环境变量
+
+只配置变量值，不要把实际密钥写入仓库：
+
+- `MODELSCOPE_ACCESS_TOKEN`
+- `TJWEATHER_API_KEY`
+- `TJWEATHER_SUBSCRIPTION_ID`
+
+### 12.3 ModelScope 创空间
+
+目标空间：<https://modelscope.cn/studios/sunh0203/outdoor-weather-agent>
+
+需要同步 `app.py`、`requirements.txt`、`weather_agent/`、`README.md` 和许可证文件（如平台要求），然后在创空间的环境变量或密钥设置中配置上述三个变量。启动入口为 `python app.py`。部署后必须用一个新会话重新执行骑行示例，确认会话状态不会沿用本地或其他访客的数据。
