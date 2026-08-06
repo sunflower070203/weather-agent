@@ -74,6 +74,17 @@ class GeocodingClient:
                 resolved_query = municipality
                 is_approximate = bool(results)
 
+        normalized_city = normalized_query.removesuffix("市")
+        if normalized_city in MUNICIPALITIES:
+            municipality_results = [
+                result
+                for result in results
+                if result.get("name", "").removesuffix("市") == normalized_city
+                and result.get("admin1", "").removesuffix("市") == normalized_city
+            ]
+            if municipality_results:
+                results = municipality_results[:1]
+
         return tuple(
             LocationCandidate(
                 name=result["name"],

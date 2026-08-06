@@ -84,6 +84,78 @@ class GeocodingClientTests(unittest.TestCase):
 
         session.get.assert_not_called()
 
+    def test_exact_municipality_query_discards_other_same_name_places(self):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            "results": [
+                {
+                    "name": "北京",
+                    "latitude": 39.9075,
+                    "longitude": 116.3972,
+                    "country": "中国",
+                    "admin1": "北京市",
+                    "timezone": "Asia/Shanghai",
+                },
+                {
+                    "name": "北京",
+                    "latitude": 29.5,
+                    "longitude": 106.5,
+                    "country": "中国",
+                    "admin1": "重庆市",
+                    "timezone": "Asia/Shanghai",
+                },
+                {
+                    "name": "北京",
+                    "latitude": 30.6,
+                    "longitude": 104.1,
+                    "country": "中国",
+                    "admin1": "四川",
+                    "timezone": "Asia/Shanghai",
+                },
+            ]
+        }
+        session = Mock()
+        session.get.return_value = response
+
+        candidates = GeocodingClient(session=session).search("北京")
+
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0].admin1, "北京市")
+        self.assertEqual(candidates[0].longitude, 116.3972)
+
+    def test_non_municipality_results_are_not_discarded_or_reordered(self):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            "results": [
+                {
+                    "name": "杭州",
+                    "latitude": 30.0,
+                    "longitude": 102.0,
+                    "country": "中国",
+                    "admin1": "四川",
+                    "timezone": "Asia/Shanghai",
+                },
+                {
+                    "name": "杭州市",
+                    "latitude": 30.27,
+                    "longitude": 120.15,
+                    "country": "中国",
+                    "admin1": "浙江",
+                    "timezone": "Asia/Shanghai",
+                },
+            ]
+        }
+        session = Mock()
+        session.get.return_value = response
+
+        candidates = GeocodingClient(session=session).search("杭州")
+
+        self.assertEqual(len(candidates), 2)
+        self.assertEqual(candidates[0].admin1, "四川")
+        self.assertEqual(candidates[1].admin1, "浙江")
+
 
 if __name__ == "__main__":
     unittest.main()
