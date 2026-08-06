@@ -237,6 +237,46 @@ class WeatherAgentTests(unittest.TestCase):
         self.assertEqual(result.plan.location, "北京奥森")
         self.assertEqual(agent.pending_locations, ())
 
+    def test_activity_change_during_choice_is_applied_and_acknowledged(self):
+        from weather_agent.agent import WeatherAgent
+
+        old = ActivityPlan("hiking", "上海", START, 4)
+        updated = ActivityPlan("camping", "上海", START, 4)
+        places = (
+            candidate("上海", 31.23, 121.47, "上海市"),
+            candidate("上海", 29.00, 120.00, "浙江"),
+        )
+        extractor = Mock()
+        extractor.update_plan.return_value = updated
+        agent = WeatherAgent(extractor, FakeGeocoder(places), FakeWeather())
+        agent.plan = old
+        agent.pending_locations = places
+
+        result = agent.handle_message("改成露营", now=START)
+
+        self.assertEqual(result.kind, "location_choice")
+        self.assertEqual(result.plan.activity_type, "camping")
+        self.assertIn("已更新计划", result.message)
+        extractor.update_plan.assert_called_once_with(old, "改成露营", now=START)
+
+    def test_unrelated_text_during_choice_keeps_candidates_without_extraction(self):
+        from weather_agent.agent import WeatherAgent
+
+        places = (
+            candidate("上海", 31.23, 121.47, "上海市"),
+            candidate("上海", 29.00, 120.00, "浙江"),
+        )
+        extractor = Mock()
+        agent = WeatherAgent(extractor, FakeGeocoder(()), FakeWeather())
+        agent.plan = ActivityPlan("hiking", "上海", START, 4)
+        agent.pending_locations = places
+
+        result = agent.handle_message("天气怎么样", now=START)
+
+        self.assertEqual(result.kind, "location_choice")
+        self.assertEqual(result.candidates, places)
+        extractor.update_plan.assert_not_called()
+
     def test_weather_failure_returns_safe_error_without_recommendation(self):
         from weather_agent.agent import WeatherAgent
         from weather_agent.tjweather import TJWeatherError

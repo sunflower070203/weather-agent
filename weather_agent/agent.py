@@ -16,7 +16,15 @@ ORDINAL_CHOICES = {
     "第五个": 4,
 }
 NONE_OF_THESE = {"都不是", "没有合适的", "重新选地点"}
-LOCATION_CHANGE_PREFIXES = ("改成", "换成", "地点改为", "改到")
+PLAN_CHANGE_PREFIXES = (
+    "改成",
+    "换成",
+    "改为",
+    "改到",
+    "时间改",
+    "地点改",
+    "时长改",
+)
 
 
 @dataclass(frozen=True)
@@ -38,6 +46,7 @@ class WeatherAgent:
 
     def handle_message(self, message, *, now):
         text = message.strip()
+        plan_was_modified = False
         if not text or not any(character.isalnum() for character in text):
             return AgentResult(
                 "question", "请补充有效的活动信息。", self.plan
@@ -63,10 +72,11 @@ class WeatherAgent:
                 self.pending_locations = ()
                 return self._evaluate(selected)
 
-            if not text.startswith(LOCATION_CHANGE_PREFIXES):
+            if not text.startswith(PLAN_CHANGE_PREFIXES):
                 return self._location_choice_result(self.pending_locations)
 
             self.pending_locations = ()
+            plan_was_modified = True
 
         self.plan = self.extractor.update_plan(self.plan, message, now=now)
         if not self.plan.is_ready():
@@ -85,7 +95,10 @@ class WeatherAgent:
             )
         if len(candidates) > 1:
             self.pending_locations = tuple(candidates)
-            return self._location_choice_result(self.pending_locations)
+            return self._location_choice_result(
+                self.pending_locations,
+                prefix="已更新计划。" if plan_was_modified else "",
+            )
         return self._evaluate(candidates[0])
 
     def _candidate_index(self, text):
@@ -105,14 +118,14 @@ class WeatherAgent:
         ]
         return matches[0] if len(matches) == 1 else None
 
-    def _location_choice_result(self, candidates):
+    def _location_choice_result(self, candidates, *, prefix=""):
         choices = "\n".join(
                 f"{index}. {candidate.display_name}"
                 for index, candidate in enumerate(candidates, start=1)
             )
         return AgentResult(
             "location_choice",
-            f"找到多个可能地点，请回复序号确认：\n{choices}",
+            f"{prefix}找到多个可能地点，请回复序号确认：\n{choices}",
             self.plan,
             candidates=tuple(candidates),
         )
