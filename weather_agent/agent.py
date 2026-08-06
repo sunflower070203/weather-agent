@@ -153,10 +153,16 @@ class WeatherAgent:
         approximation = (
             "天气坐标为城市级近似；" if location.is_approximate else ""
         )
+        risk_text = "；".join(
+            f"{risk.kind} {risk.level}：{risk.value:.1f} {risk.unit}"
+            for risk in risks
+        )
+        rule_result = risk_text or "未识别到明显天气风险"
         evidence = (
-            f"地点：{location.display_name}；活动时段："
+            f"决策依据：地点：{location.display_name}；活动时段："
             f"{self.plan.start_time.isoformat()} 起 {self.plan.duration_hours:g} 小时；"
-            f"{approximation}预报起报时间：{forecast.time_init.isoformat()}。"
+            f"{approximation}预报起报时间：{forecast.time_init.isoformat()}；"
+            f"规则结果：{rule_result}。"
         )
         if not risks:
             return (
@@ -165,10 +171,6 @@ class WeatherAgent:
                 "方案二：保留室内或缩短路线作为天气突变时的备选。"
             )
 
-        risk_text = "；".join(
-            f"{risk.kind} {risk.level}：{risk.value:.1f} {risk.unit}"
-            for risk in risks
-        )
         return (
             f"检测到天气风险：{risk_text}。{evidence}\n"
             "方案一：调整活动时间，避开风险较高的时段后重新查询。\n"

@@ -254,6 +254,39 @@ class WeatherAgentTests(unittest.TestCase):
 
         self.assertIn("城市级近似", result.message)
 
+    def test_safe_recommendation_labels_public_decision_evidence(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START, 3)
+        place = candidate("北京", 40.0, 116.4, "北京")
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(forecast_payload()),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertIn("决策依据：", result.message)
+        self.assertIn("规则结果：未识别到明显天气风险", result.message)
+        self.assertIn("预报起报时间", result.message)
+
+    def test_risky_recommendation_labels_triggered_rule_evidence(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START, 3)
+        place = candidate("北京", 40.0, 116.4, "北京")
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(forecast_payload(rain=3.0)),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertIn("决策依据：", result.message)
+        self.assertIn("规则结果：precipitation medium", result.message)
+
     def test_punctuation_only_message_does_not_call_extractor(self):
         from weather_agent.agent import WeatherAgent
 
