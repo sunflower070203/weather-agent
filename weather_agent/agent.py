@@ -8,6 +8,16 @@ from weather_agent.risks import RiskAssessment, assess_weather_risks
 from weather_agent.tjweather import TJWeatherError
 
 
+ORDINAL_CHOICES = {
+    "第一个": 0,
+    "第二个": 1,
+    "第三个": 2,
+    "第四个": 3,
+    "第五个": 4,
+}
+NONE_OF_THESE = {"都不是", "没有合适的", "重新选地点"}
+
+
 @dataclass(frozen=True)
 class AgentResult:
     kind: str
@@ -27,14 +37,24 @@ class WeatherAgent:
 
     def handle_message(self, message, *, now):
         if self.pending_locations:
-            try:
-                selected = self.pending_locations[int(message.strip()) - 1]
-                if int(message.strip()) < 1:
-                    raise IndexError
-            except (ValueError, IndexError):
+            text = message.strip()
+            if text in NONE_OF_THESE:
+                self.pending_locations = ()
+                self.plan = self.plan.with_updates({"location": None})
+                return AgentResult(
+                    "question", "请提供更具体的活动地点。", self.plan
+                )
+
+            selected_index = self._candidate_index(text)
+            if selected_index is not None:
+                selected = self.pending_locations[selected_index]
+                self.pending_locations = ()
+                return self._evaluate(selected)
+
+            if text.isdigit() or (text.startswith("第") and text.endswith("个")):
                 return self._location_choice_result(self.pending_locations)
+
             self.pending_locations = ()
-            return self._evaluate(selected)
 
         self.plan = self.extractor.update_plan(self.plan, message, now=now)
         if not self.plan.is_ready():
@@ -55,6 +75,23 @@ class WeatherAgent:
             self.pending_locations = tuple(candidates)
             return self._location_choice_result(self.pending_locations)
         return self._evaluate(candidates[0])
+
+    def _candidate_index(self, text):
+        if text.isdigit():
+            index = int(text) - 1
+            return index if 0 <= index < len(self.pending_locations) else None
+
+        if text in ORDINAL_CHOICES:
+            index = ORDINAL_CHOICES[text]
+            return index if index < len(self.pending_locations) else None
+
+        matches = [
+            index
+            for index, candidate in enumerate(self.pending_locations)
+            if candidate.display_name in text
+            or (candidate.admin1 and candidate.admin1 in text)
+        ]
+        return matches[0] if len(matches) == 1 else None
 
     def _location_choice_result(self, candidates):
         choices = "\n".join(

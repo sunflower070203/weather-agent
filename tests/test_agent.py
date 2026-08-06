@@ -134,6 +134,91 @@ class WeatherAgentTests(unittest.TestCase):
         self.assertEqual(result.kind, "recommendation")
         self.assertEqual(weather.calls, [(123.00, 41.10)])
 
+    def test_chinese_ordinal_selects_candidate(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "森林公园", START, 3)
+        first = candidate("天津森林公园", 39.1, 117.2, "天津")
+        second = candidate("北京森林公园", 40.0, 116.4, "北京")
+        weather = FakeWeather(forecast_payload())
+        agent = WeatherAgent(FakeExtractor([]), FakeGeocoder(()), weather)
+        agent.plan = plan
+        agent.pending_locations = (first, second)
+
+        result = agent.handle_message("第二个", now=START)
+
+        self.assertEqual(result.kind, "recommendation")
+        self.assertEqual(weather.calls, [(116.4, 40.0)])
+
+    def test_unique_candidate_text_selects_candidate(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "森林公园", START, 3)
+        first = candidate("天津森林公园", 39.1, 117.2, "天津")
+        second = candidate("北京森林公园", 40.0, 116.4, "北京")
+        weather = FakeWeather(forecast_payload())
+        agent = WeatherAgent(FakeExtractor([]), FakeGeocoder(()), weather)
+        agent.plan = plan
+        agent.pending_locations = (first, second)
+
+        agent.handle_message("选北京那个", now=START)
+
+        self.assertEqual(weather.calls, [(116.4, 40.0)])
+
+    def test_invalid_candidate_numbers_keep_pending_choices(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "森林公园", START, 3)
+        places = (candidate("北京森林公园", 40.0, 116.4, "北京"),)
+        agent = WeatherAgent(FakeExtractor([]), FakeGeocoder(()), FakeWeather())
+        agent.plan = plan
+        agent.pending_locations = places
+
+        for message in ("0", "2", "第两个"):
+            with self.subTest(message=message):
+                result = agent.handle_message(message, now=START)
+                self.assertEqual(result.kind, "location_choice")
+                self.assertEqual(agent.pending_locations, places)
+
+    def test_none_of_candidates_clears_only_location(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "森林公园", START, 3)
+        places = (candidate("北京森林公园", 40.0, 116.4, "北京"),)
+        agent = WeatherAgent(FakeExtractor([]), FakeGeocoder(()), FakeWeather())
+        agent.plan = plan
+        agent.pending_locations = places
+
+        result = agent.handle_message("都不是", now=START)
+
+        self.assertEqual(result.kind, "question")
+        self.assertEqual(result.message, "请提供更具体的活动地点。")
+        self.assertIsNone(result.plan.location)
+        self.assertEqual(result.plan.activity_type, "cycling")
+        self.assertEqual(agent.pending_locations, ())
+
+    def test_new_location_during_choice_reenters_extraction(self):
+        from weather_agent.agent import WeatherAgent
+
+        old = ActivityPlan("cycling", "森林公园", START, 3)
+        corrected = ActivityPlan("cycling", "北京奥森", START, 3)
+        place = candidate("北京奥森", 40.0, 116.4, "北京")
+        agent = WeatherAgent(
+            FakeExtractor([corrected]),
+            FakeGeocoder((place,)),
+            FakeWeather(forecast_payload()),
+        )
+        agent.plan = old
+        agent.pending_locations = (
+            candidate("天津森林公园", 39.1, 117.2, "天津"),
+        )
+
+        result = agent.handle_message("改成北京奥森", now=START)
+
+        self.assertEqual(result.kind, "recommendation")
+        self.assertEqual(result.plan.location, "北京奥森")
+        self.assertEqual(agent.pending_locations, ())
+
     def test_weather_failure_returns_safe_error_without_recommendation(self):
         from weather_agent.agent import WeatherAgent
         from weather_agent.tjweather import TJWeatherError
