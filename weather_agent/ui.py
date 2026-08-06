@@ -111,7 +111,10 @@ def respond(message, history, agent, *, now=None):
         )
         reply = result.message
         summary = format_plan(result.plan)
-    except (ActivityExtractionError, ModelScopeError, TJWeatherError) as exc:
+    except ActivityExtractionError:
+        reply = "我没能可靠理解这次修改，请换一种说法并明确活动、地点、时间或时长。"
+        summary = format_plan(agent.plan) if agent else EMPTY_PLAN
+    except (ModelScopeError, TJWeatherError) as exc:
         reply = f"服务配置暂不可用：{exc}"
         summary = format_plan(agent.plan) if agent else EMPTY_PLAN
 

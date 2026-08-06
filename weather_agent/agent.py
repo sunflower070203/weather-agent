@@ -36,8 +36,19 @@ class WeatherAgent:
         self.pending_locations = ()
 
     def handle_message(self, message, *, now):
+        text = message.strip()
+        if not text or not any(character.isalnum() for character in text):
+            return AgentResult(
+                "question", "请补充有效的活动信息。", self.plan
+            )
+        if text in {"重新开始", "重置", "清空计划"}:
+            self.plan = ActivityPlan()
+            self.pending_locations = ()
+            return AgentResult(
+                "reset", "已重新开始，请告诉我计划的户外活动。", self.plan
+            )
+
         if self.pending_locations:
-            text = message.strip()
             if text in NONE_OF_THESE:
                 self.pending_locations = ()
                 self.plan = self.plan.with_updates({"location": None})
@@ -125,7 +136,8 @@ class WeatherAgent:
         if not points:
             return AgentResult(
                 "error",
-                "活动时间不在当前有效预报范围内，无法进行可靠评估。",
+                "活动时间不在当前有效预报范围内，无法进行可靠评估。"
+                "请调整活动时间后重新查询。",
                 self.plan,
             )
 

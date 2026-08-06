@@ -1,6 +1,7 @@
 import unittest
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from unittest.mock import Mock
 
 from weather_agent.activity import ActivityPlan
 from weather_agent.forecast import WeatherPoint
@@ -252,6 +253,64 @@ class WeatherAgentTests(unittest.TestCase):
         result = agent.handle_message("完整计划", now=START)
 
         self.assertIn("城市级近似", result.message)
+
+    def test_punctuation_only_message_does_not_call_extractor(self):
+        from weather_agent.agent import WeatherAgent
+
+        extractor = Mock()
+        agent = WeatherAgent(extractor, FakeGeocoder(()), FakeWeather())
+
+        result = agent.handle_message("？！……", now=START)
+
+        self.assertEqual(result.kind, "question")
+        self.assertIn("有效", result.message)
+        extractor.update_plan.assert_not_called()
+
+    def test_reset_command_clears_plan_and_pending_candidates(self):
+        from weather_agent.agent import WeatherAgent
+
+        agent = WeatherAgent(Mock(), FakeGeocoder(()), FakeWeather())
+        agent.plan = ActivityPlan("cycling", "北京", START, 3)
+        agent.pending_locations = (
+            candidate("北京", 40.0, 116.4, "北京"),
+        )
+
+        result = agent.handle_message("重新开始", now=START)
+
+        self.assertEqual(result.kind, "reset")
+        self.assertEqual(result.plan, ActivityPlan())
+        self.assertEqual(agent.pending_locations, ())
+
+    def test_geocoding_failure_preserves_plan_and_suggests_retry(self):
+        from weather_agent.agent import WeatherAgent
+        from weather_agent.geocoding import GeocodingError
+
+        plan = ActivityPlan("cycling", "北京", START, 3)
+        geocoder = Mock()
+        geocoder.search.side_effect = GeocodingError("timeout")
+        agent = WeatherAgent(FakeExtractor([plan]), geocoder, FakeWeather())
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertEqual(result.plan, plan)
+        self.assertIn("重试", result.message)
+
+    def test_out_of_range_forecast_suggests_time_change(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START, 3)
+        place = candidate("北京", 40.0, 116.4, "北京")
+        payload = forecast_payload()
+        payload["data"][0]["time"] = "2026-08-07T08:00:00+08:00"
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(payload),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertIn("调整活动时间", result.message)
 
 
 if __name__ == "__main__":
