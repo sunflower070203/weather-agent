@@ -11,11 +11,11 @@
 
 ## 仓库检查
 
-- [ ] `python -m unittest discover -s tests -v` 全部通过。
-- [ ] `python -m compileall -q weather_agent tests app.py` 通过。
-- [ ] `git diff --check` 通过。
-- [ ] 仓库中没有密钥、OAuth 凭证、`studio_token` 或含真实值的环境变量赋值。
-- [ ] README、演示脚本、架构说明和复盘采用相同能力边界。
+- [x] `python -m unittest discover -s tests -v` 全部通过（60 项）。
+- [x] `python -m compileall -q weather_agent tests app.py` 通过。
+- [x] `git diff --check` 通过。
+- [x] 已跟踪文件凭证扫描未发现密钥、OAuth 凭证、`studio_token` 或含真实值的环境变量赋值。
+- [x] README、演示脚本、架构说明和复盘采用相同能力边界。
 - [ ] GitHub `main` 对应最终候选提交，工作区无遗漏改动。
 
 ## ModelScope 发布验证
