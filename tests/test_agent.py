@@ -402,6 +402,36 @@ class WeatherAgentTests(unittest.TestCase):
 
         self.assertIn("调整活动时间", result.message)
 
+    def test_past_start_time_is_rejected_before_geocoding(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START - timedelta(hours=1), 3)
+        geocoder = FakeGeocoder((candidate("北京", 40.0, 116.4, "北京市"),))
+        weather = FakeWeather(forecast_payload())
+        agent = WeatherAgent(FakeExtractor([plan]), geocoder, weather)
+
+        result = agent.handle_message("昨天在北京骑行三小时", now=START)
+
+        self.assertEqual(result.kind, "question")
+        self.assertIn("未来时间", result.message)
+        self.assertEqual(geocoder.queries, [])
+        self.assertEqual(weather.calls, [])
+
+    def test_duration_over_seven_days_is_rejected_before_geocoding(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START, 1000)
+        geocoder = FakeGeocoder((candidate("北京", 40.0, 116.4, "北京市"),))
+        weather = FakeWeather(forecast_payload())
+        agent = WeatherAgent(FakeExtractor([plan]), geocoder, weather)
+
+        result = agent.handle_message("在北京骑行一千小时", now=START)
+
+        self.assertEqual(result.kind, "question")
+        self.assertIn("缩短", result.message)
+        self.assertEqual(geocoder.queries, [])
+        self.assertEqual(weather.calls, [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -82,6 +82,10 @@ class WeatherAgent:
         if not self.plan.is_ready():
             return AgentResult("question", self.plan.next_question(), self.plan)
 
+        validation_result = self._validate_plan(now)
+        if validation_result:
+            return validation_result
+
         try:
             candidates = self.geocoder.search(self.plan.location)
         except GeocodingError:
@@ -100,6 +104,21 @@ class WeatherAgent:
                 prefix="已更新计划。" if plan_was_modified else "",
             )
         return self._evaluate(candidates[0])
+
+    def _validate_plan(self, now):
+        if self.plan.start_time < now:
+            return AgentResult(
+                "question",
+                "活动开始时间已经过去，请提供未来时间。",
+                self.plan,
+            )
+        if self.plan.duration_hours > 168:
+            return AgentResult(
+                "question",
+                "活动时长过长，请缩短到 168 小时以内。",
+                self.plan,
+            )
+        return None
 
     def _candidate_index(self, text):
         if text.isdigit():
