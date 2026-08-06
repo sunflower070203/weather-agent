@@ -16,6 +16,7 @@ ORDINAL_CHOICES = {
     "第五个": 4,
 }
 NONE_OF_THESE = {"都不是", "没有合适的", "重新选地点"}
+LOCATION_CHANGE_PREFIXES = ("改成", "换成", "地点改为", "改到")
 
 
 @dataclass(frozen=True)
@@ -62,7 +63,7 @@ class WeatherAgent:
                 self.pending_locations = ()
                 return self._evaluate(selected)
 
-            if text.isdigit() or (text.startswith("第") and text.endswith("个")):
+            if not text.startswith(LOCATION_CHANGE_PREFIXES):
                 return self._location_choice_result(self.pending_locations)
 
             self.pending_locations = ()

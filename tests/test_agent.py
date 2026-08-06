@@ -166,6 +166,23 @@ class WeatherAgentTests(unittest.TestCase):
 
         self.assertEqual(weather.calls, [(116.4, 40.0)])
 
+    def test_ambiguous_candidate_text_keeps_pending_choices(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "森林公园", START, 3)
+        places = (
+            candidate("北京东城森林公园", 39.9, 116.4, "北京"),
+            candidate("北京西山森林公园", 39.9, 116.2, "北京"),
+        )
+        agent = WeatherAgent(FakeExtractor([]), FakeGeocoder(()), FakeWeather())
+        agent.plan = plan
+        agent.pending_locations = places
+
+        result = agent.handle_message("选北京那个", now=START)
+
+        self.assertEqual(result.kind, "location_choice")
+        self.assertEqual(agent.pending_locations, places)
+
     def test_invalid_candidate_numbers_keep_pending_choices(self):
         from weather_agent.agent import WeatherAgent
 
