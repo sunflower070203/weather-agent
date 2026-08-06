@@ -67,6 +67,29 @@ class UIAdapterTests(unittest.TestCase):
 
         self.assertEqual(reset_session(), ([], None, "尚未填写活动计划。"))
 
+    @patch("weather_agent.ui.new_session")
+    def test_reset_then_response_creates_agent_without_old_plan(self, new_session):
+        from weather_agent.agent import AgentResult
+        from weather_agent.ui import respond, reset_session
+
+        fresh_agent = Mock()
+        fresh_agent.plan = ActivityPlan()
+        fresh_agent.handle_message.return_value = AgentResult(
+            "question", "活动地点在哪里？", ActivityPlan(activity_type="cycling")
+        )
+        new_session.return_value = fresh_agent
+
+        history, agent, summary = reset_session()
+        _, next_history, returned_agent, next_summary = respond(
+            "我想骑行", history, agent, now=NOW
+        )
+
+        self.assertEqual(summary, "尚未填写活动计划。")
+        self.assertIs(returned_agent, fresh_agent)
+        self.assertEqual([item["role"] for item in next_history], ["user", "assistant"])
+        self.assertIn("骑行", next_summary)
+        new_session.assert_called_once_with()
+
     def test_extraction_error_reply_preserves_plan_summary(self):
         from weather_agent.extraction import ActivityExtractionError
         from weather_agent.ui import respond
