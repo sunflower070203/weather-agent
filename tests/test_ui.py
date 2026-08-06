@@ -67,6 +67,22 @@ class UIAdapterTests(unittest.TestCase):
 
         self.assertEqual(reset_session(), ([], None, "尚未填写活动计划。"))
 
+    def test_extraction_error_reply_preserves_plan_summary(self):
+        from weather_agent.extraction import ActivityExtractionError
+        from weather_agent.ui import respond
+
+        agent = Mock()
+        agent.plan = ActivityPlan("cycling", "北京", NOW, 3)
+        agent.handle_message.side_effect = ActivityExtractionError("bad output")
+
+        _, history, returned_agent, summary = respond(
+            "改时间", [], agent, now=NOW
+        )
+
+        self.assertIn("换一种说法", history[-1]["content"])
+        self.assertIn("北京", summary)
+        self.assertIs(returned_agent, agent)
+
 
 if __name__ == "__main__":
     unittest.main()

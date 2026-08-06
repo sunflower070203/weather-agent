@@ -49,6 +49,8 @@ class ActivityExtractor:
             },
         ]
         extracted = self.model.complete_json(messages)
+        if not isinstance(extracted, dict):
+            raise ActivityExtractionError("model response must be a JSON object")
         updates = {
             key: value
             for key, value in extracted.items()

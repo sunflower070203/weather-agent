@@ -111,7 +111,10 @@ def respond(message, history, agent, *, now=None):
         )
         reply = result.message
         summary = format_plan(result.plan)
-    except (ActivityExtractionError, ModelScopeError, TJWeatherError) as exc:
+    except ActivityExtractionError:
+        reply = "我没能可靠理解这次修改，请换一种说法并明确活动、地点、时间或时长。"
+        summary = format_plan(agent.plan) if agent else EMPTY_PLAN
+    except (ModelScopeError, TJWeatherError) as exc:
         reply = f"服务配置暂不可用：{exc}"
         summary = format_plan(agent.plan) if agent else EMPTY_PLAN
 
@@ -165,7 +168,8 @@ def build_app():
                     """
 ### 使用提示
 
-- 地点出现多个候选时，请回复对应序号。
+- 地点出现多个候选时，可回复“2”“第二个”或“选北京那个”。
+- 候选都不合适时回复“都不是”；输入“重新开始”可清空计划。
 - 具体公园可能采用城市级天气坐标，结果会明确标注。
 - 修改时间或地点后，Agent 会重新查询并评估。
 """

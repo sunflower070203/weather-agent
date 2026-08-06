@@ -8,6 +8,17 @@ from weather_agent.risks import RiskAssessment, assess_weather_risks
 from weather_agent.tjweather import TJWeatherError
 
 
+ORDINAL_CHOICES = {
+    "第一个": 0,
+    "第二个": 1,
+    "第三个": 2,
+    "第四个": 3,
+    "第五个": 4,
+}
+NONE_OF_THESE = {"都不是", "没有合适的", "重新选地点"}
+LOCATION_CHANGE_PREFIXES = ("改成", "换成", "地点改为", "改到")
+
+
 @dataclass(frozen=True)
 class AgentResult:
     kind: str
@@ -26,15 +37,36 @@ class WeatherAgent:
         self.pending_locations = ()
 
     def handle_message(self, message, *, now):
-        if self.pending_locations:
-            try:
-                selected = self.pending_locations[int(message.strip()) - 1]
-                if int(message.strip()) < 1:
-                    raise IndexError
-            except (ValueError, IndexError):
-                return self._location_choice_result(self.pending_locations)
+        text = message.strip()
+        if not text or not any(character.isalnum() for character in text):
+            return AgentResult(
+                "question", "请补充有效的活动信息。", self.plan
+            )
+        if text in {"重新开始", "重置", "清空计划"}:
+            self.plan = ActivityPlan()
             self.pending_locations = ()
-            return self._evaluate(selected)
+            return AgentResult(
+                "reset", "已重新开始，请告诉我计划的户外活动。", self.plan
+            )
+
+        if self.pending_locations:
+            if text in NONE_OF_THESE:
+                self.pending_locations = ()
+                self.plan = self.plan.with_updates({"location": None})
+                return AgentResult(
+                    "question", "请提供更具体的活动地点。", self.plan
+                )
+
+            selected_index = self._candidate_index(text)
+            if selected_index is not None:
+                selected = self.pending_locations[selected_index]
+                self.pending_locations = ()
+                return self._evaluate(selected)
+
+            if not text.startswith(LOCATION_CHANGE_PREFIXES):
+                return self._location_choice_result(self.pending_locations)
+
+            self.pending_locations = ()
 
         self.plan = self.extractor.update_plan(self.plan, message, now=now)
         if not self.plan.is_ready():
@@ -55,6 +87,23 @@ class WeatherAgent:
             self.pending_locations = tuple(candidates)
             return self._location_choice_result(self.pending_locations)
         return self._evaluate(candidates[0])
+
+    def _candidate_index(self, text):
+        if text.isdigit():
+            index = int(text) - 1
+            return index if 0 <= index < len(self.pending_locations) else None
+
+        if text in ORDINAL_CHOICES:
+            index = ORDINAL_CHOICES[text]
+            return index if index < len(self.pending_locations) else None
+
+        matches = [
+            index
+            for index, candidate in enumerate(self.pending_locations)
+            if candidate.display_name in text
+            or (candidate.admin1 and candidate.admin1 in text)
+        ]
+        return matches[0] if len(matches) == 1 else None
 
     def _location_choice_result(self, candidates):
         choices = "\n".join(
@@ -88,7 +137,8 @@ class WeatherAgent:
         if not points:
             return AgentResult(
                 "error",
-                "活动时间不在当前有效预报范围内，无法进行可靠评估。",
+                "活动时间不在当前有效预报范围内，无法进行可靠评估。"
+                "请调整活动时间后重新查询。",
                 self.plan,
             )
 
@@ -104,10 +154,16 @@ class WeatherAgent:
         approximation = (
             "天气坐标为城市级近似；" if location.is_approximate else ""
         )
+        risk_text = "；".join(
+            f"{risk.kind} {risk.level}：{risk.value:.1f} {risk.unit}"
+            for risk in risks
+        )
+        rule_result = risk_text or "未识别到明显天气风险"
         evidence = (
-            f"地点：{location.display_name}；活动时段："
+            f"决策依据：地点：{location.display_name}；活动时段："
             f"{self.plan.start_time.isoformat()} 起 {self.plan.duration_hours:g} 小时；"
-            f"{approximation}预报起报时间：{forecast.time_init.isoformat()}。"
+            f"{approximation}预报起报时间：{forecast.time_init.isoformat()}；"
+            f"规则结果：{rule_result}。"
         )
         if not risks:
             return (
@@ -116,10 +172,6 @@ class WeatherAgent:
                 "方案二：保留室内或缩短路线作为天气突变时的备选。"
             )
 
-        risk_text = "；".join(
-            f"{risk.kind} {risk.level}：{risk.value:.1f} {risk.unit}"
-            for risk in risks
-        )
         return (
             f"检测到天气风险：{risk_text}。{evidence}\n"
             "方案一：调整活动时间，避开风险较高的时段后重新查询。\n"
