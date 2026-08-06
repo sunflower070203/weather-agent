@@ -9,6 +9,26 @@ NOW = datetime(2026, 8, 4, 14, 0, tzinfo=timezone(timedelta(hours=8)))
 
 
 class UIAdapterTests(unittest.TestCase):
+    def test_app_version_uses_safe_default(self):
+        from weather_agent.ui import get_app_version
+
+        self.assertEqual(get_app_version({}), "submission-2026-08-07")
+
+    def test_app_version_uses_deployment_value(self):
+        from weather_agent.ui import get_app_version
+
+        self.assertEqual(
+            get_app_version({"WEATHER_AGENT_VERSION": "rc-8c10dff"}),
+            "rc-8c10dff",
+        )
+
+    def test_build_app_renders_release_version(self):
+        from weather_agent.ui import build_app
+
+        demo = build_app(version="rc-test")
+
+        self.assertIn("rc-test", str(demo.config))
+
     def test_build_app_returns_gradio_blocks(self):
         import gradio as gr
 

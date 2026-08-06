@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 import gradio as gr
@@ -11,6 +12,7 @@ from weather_agent.tjweather import TJWeatherClient, TJWeatherConfig, TJWeatherE
 
 EMPTY_PLAN = "尚未填写活动计划。"
 ACTIVITY_NAMES = {"cycling": "骑行", "hiking": "徒步", "camping": "露营"}
+DEFAULT_APP_VERSION = "submission-2026-08-07"
 APP_CSS = """
 :root {
   --forest: #173b32;
@@ -62,6 +64,12 @@ APP_THEME = gr.themes.Base(
     secondary_hue="emerald",
     neutral_hue="stone",
 )
+
+
+def get_app_version(environ=None):
+    source = os.environ if environ is None else environ
+    value = source.get("WEATHER_AGENT_VERSION", "").strip()
+    return value or DEFAULT_APP_VERSION
 
 
 def create_agent():
@@ -131,7 +139,8 @@ def reset_session():
     return [], None, EMPTY_PLAN
 
 
-def build_app():
+def build_app(*, version=None):
+    version = version or get_app_version()
     with gr.Blocks(title="户外天气决策 Agent") as demo:
         agent_state = gr.State(None)
         gr.Markdown(
@@ -189,6 +198,7 @@ def build_app():
             "城市级近似不能代表山地、峡谷或水域的局地天气。",
             elem_classes="data-note",
         )
+        gr.Markdown(f"运行版本：`{version}`", elem_classes="data-note")
 
         interaction_inputs = [message, chatbot, agent_state]
         interaction_outputs = [message, chatbot, agent_state, plan_summary]
