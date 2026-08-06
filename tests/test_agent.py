@@ -237,6 +237,46 @@ class WeatherAgentTests(unittest.TestCase):
         self.assertEqual(result.plan.location, "北京奥森")
         self.assertEqual(agent.pending_locations, ())
 
+    def test_activity_change_during_choice_is_applied_and_acknowledged(self):
+        from weather_agent.agent import WeatherAgent
+
+        old = ActivityPlan("hiking", "上海", START, 4)
+        updated = ActivityPlan("camping", "上海", START, 4)
+        places = (
+            candidate("上海", 31.23, 121.47, "上海市"),
+            candidate("上海", 29.00, 120.00, "浙江"),
+        )
+        extractor = Mock()
+        extractor.update_plan.return_value = updated
+        agent = WeatherAgent(extractor, FakeGeocoder(places), FakeWeather())
+        agent.plan = old
+        agent.pending_locations = places
+
+        result = agent.handle_message("改成露营", now=START)
+
+        self.assertEqual(result.kind, "location_choice")
+        self.assertEqual(result.plan.activity_type, "camping")
+        self.assertIn("已更新计划", result.message)
+        extractor.update_plan.assert_called_once_with(old, "改成露营", now=START)
+
+    def test_unrelated_text_during_choice_keeps_candidates_without_extraction(self):
+        from weather_agent.agent import WeatherAgent
+
+        places = (
+            candidate("上海", 31.23, 121.47, "上海市"),
+            candidate("上海", 29.00, 120.00, "浙江"),
+        )
+        extractor = Mock()
+        agent = WeatherAgent(extractor, FakeGeocoder(()), FakeWeather())
+        agent.plan = ActivityPlan("hiking", "上海", START, 4)
+        agent.pending_locations = places
+
+        result = agent.handle_message("天气怎么样", now=START)
+
+        self.assertEqual(result.kind, "location_choice")
+        self.assertEqual(result.candidates, places)
+        extractor.update_plan.assert_not_called()
+
     def test_weather_failure_returns_safe_error_without_recommendation(self):
         from weather_agent.agent import WeatherAgent
         from weather_agent.tjweather import TJWeatherError
@@ -361,6 +401,36 @@ class WeatherAgentTests(unittest.TestCase):
         result = agent.handle_message("完整计划", now=START)
 
         self.assertIn("调整活动时间", result.message)
+
+    def test_past_start_time_is_rejected_before_geocoding(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START - timedelta(hours=1), 3)
+        geocoder = FakeGeocoder((candidate("北京", 40.0, 116.4, "北京市"),))
+        weather = FakeWeather(forecast_payload())
+        agent = WeatherAgent(FakeExtractor([plan]), geocoder, weather)
+
+        result = agent.handle_message("昨天在北京骑行三小时", now=START)
+
+        self.assertEqual(result.kind, "question")
+        self.assertIn("未来时间", result.message)
+        self.assertEqual(geocoder.queries, [])
+        self.assertEqual(weather.calls, [])
+
+    def test_duration_over_seven_days_is_rejected_before_geocoding(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START, 1000)
+        geocoder = FakeGeocoder((candidate("北京", 40.0, 116.4, "北京市"),))
+        weather = FakeWeather(forecast_payload())
+        agent = WeatherAgent(FakeExtractor([plan]), geocoder, weather)
+
+        result = agent.handle_message("在北京骑行一千小时", now=START)
+
+        self.assertEqual(result.kind, "question")
+        self.assertIn("缩短", result.message)
+        self.assertEqual(geocoder.queries, [])
+        self.assertEqual(weather.calls, [])
 
 
 if __name__ == "__main__":
