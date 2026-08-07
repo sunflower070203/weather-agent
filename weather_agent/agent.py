@@ -51,13 +51,17 @@ class WeatherAgent:
         plan_was_modified = False
         if not text or not any(character.isalnum() for character in text):
             return AgentResult(
-                "question", "请补充有效的活动信息。", self.plan
+                "question",
+                "这条消息里没有有效的活动信息，请重新描述你的户外计划。",
+                self.plan,
             )
         if text in {"重新开始", "重置", "清空计划"}:
             self.plan = ActivityPlan()
             self.pending_locations = ()
             return AgentResult(
-                "reset", "已重新开始，请告诉我计划的户外活动。", self.plan
+                "reset",
+                "好的，已重新开始。想安排骑行、徒步还是露营？",
+                self.plan,
             )
 
         if self.pending_locations:
@@ -65,7 +69,7 @@ class WeatherAgent:
                 self.pending_locations = ()
                 self.plan = self.plan.with_updates({"location": None})
                 return AgentResult(
-                    "question", "请提供更具体的活动地点。", self.plan
+                    "question", "没关系，请提供更具体的活动地点。", self.plan
                 )
 
             if text.startswith(PLAN_CHANGE_PREFIXES):
@@ -81,7 +85,9 @@ class WeatherAgent:
 
         self.plan = self.extractor.update_plan(self.plan, message, now=now)
         if not self.plan.is_ready():
-            return AgentResult("question", self.plan.next_question(), self.plan)
+            return AgentResult(
+                "question", f"好的，{self.plan.next_question()}", self.plan
+            )
 
         validation_result = self._validate_plan(now)
         if validation_result:
@@ -91,12 +97,16 @@ class WeatherAgent:
             candidates = self.geocoder.search(self.plan.location)
         except GeocodingError:
             return AgentResult(
-                "error", "地点查询失败，请稍后重试或提供更明确的地点。", self.plan
+                "error",
+                "抱歉，地点查询失败，请稍后重试或提供更明确的地点。",
+                self.plan,
             )
 
         if not candidates:
             return AgentResult(
-                "error", "没有找到这个地点，请补充城市或行政区。", self.plan
+                "error",
+                "抱歉，没有找到这个地点，请补充城市或行政区。",
+                self.plan,
             )
         if len(candidates) > 1:
             self.pending_locations = tuple(candidates)
@@ -110,13 +120,13 @@ class WeatherAgent:
         if self.plan.start_time < now:
             return AgentResult(
                 "question",
-                "活动开始时间已经过去，请提供未来时间。",
+                "抱歉，活动开始时间已经过去，请提供未来时间。",
                 self.plan,
             )
         if self.plan.duration_hours > 168:
             return AgentResult(
                 "question",
-                "活动时长过长，请缩短到 168 小时以内。",
+                "抱歉，活动时长过长，请缩短到 168 小时以内。",
                 self.plan,
             )
         return None
@@ -145,7 +155,7 @@ class WeatherAgent:
             )
         return AgentResult(
             "location_choice",
-            f"{prefix}找到多个可能地点，请回复序号确认：\n{choices}",
+            f"{prefix}我找到了几个可能的地点，请回复序号确认：\n{choices}",
             self.plan,
             candidates=tuple(candidates),
         )
@@ -163,14 +173,14 @@ class WeatherAgent:
         except (TJWeatherError, ForecastDataError, KeyError, TypeError, ValueError):
             return AgentResult(
                 "error",
-                "无法获取天气数据，因此不能可靠评估本次活动，请稍后重试。",
+                "抱歉，暂时无法获取天气数据，因此不能可靠评估本次活动，请稍后重试。",
                 self.plan,
             )
 
         if not points:
             return AgentResult(
                 "error",
-                "活动时间不在当前有效预报范围内，无法进行可靠评估。"
+                "抱歉，活动时间不在当前有效预报范围内，无法进行可靠评估。"
                 "请调整活动时间后重新查询。",
                 self.plan,
             )
@@ -192,8 +202,10 @@ class WeatherAgent:
 
         lines = []
         if not risks:
+            lines.append("已经帮你把这次活动的天气看好了，整体比较顺利。")
             lines.append("**结论**：当前规则未识别到明显天气风险。")
         else:
+            lines.append("已经帮你把这次活动的天气看过了，有几个点需要留意。")
             lines.append(f"**结论**：检测到天气风险：{risk_text}。")
 
         lines.append("**决策依据**：")

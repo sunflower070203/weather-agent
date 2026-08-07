@@ -77,7 +77,7 @@ class WeatherAgentTests(unittest.TestCase):
         )
 
         self.assertEqual(result.kind, "question")
-        self.assertEqual(result.message, "活动地点在哪里？")
+        self.assertIn("活动地点在哪里？", result.message)
         self.assertEqual(geocoder.queries, [])
         self.assertEqual(weather.calls, [])
 
@@ -210,7 +210,7 @@ class WeatherAgentTests(unittest.TestCase):
         result = agent.handle_message("都不是", now=START)
 
         self.assertEqual(result.kind, "question")
-        self.assertEqual(result.message, "请提供更具体的活动地点。")
+        self.assertIn("请提供更具体的活动地点。", result.message)
         self.assertIsNone(result.plan.location)
         self.assertEqual(result.plan.activity_type, "cycling")
         self.assertEqual(agent.pending_locations, ())
@@ -494,6 +494,7 @@ class WeatherAgentTests(unittest.TestCase):
 
         result = agent.handle_message("完整计划", now=START)
 
+        self.assertIn("已经帮你把这次活动的天气看好了", result.message)
         self.assertIn("**结论**", result.message)
         self.assertIn("**决策依据**：", result.message)
         self.assertIn("**方案**", result.message)
