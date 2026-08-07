@@ -2,7 +2,7 @@
 
 这份清单是发布门槛，不是功能愿望单。任一“发布验证”项未通过，都不能把当前线上空间称为提交候选版。
 
-> 状态：旧候选 `rc-52fbd1a` 已验收；合并后的新候选（标签 `submission-2026-08-07-v2`）需重新执行“ModelScope 发布验证”全部项，并在部署时设置新版本号。
+> 状态：候选 `rc-64d4f5a` 已部署并通过线上回归（标签 `submission-2026-08-07-v2`）；提交期只需核对提交表单。
 
 ## 冻结范围
 
@@ -13,16 +13,16 @@
 
 ## 仓库检查
 
-- [x] `python -m unittest discover -s tests -v` 全部通过（60 项）。
-- [x] `python -m compileall -q weather_agent tests app.py` 通过。
+- [x] `python -m unittest discover -s tests -v` 全部通过（77 项）。
+- [x] `python -m compileall -q weather_agent tests evals app.py` 通过。
 - [x] `git diff --check` 通过。
 - [x] 已跟踪文件凭证扫描未发现密钥、OAuth 凭证、`studio_token` 或含真实值的环境变量赋值。
 - [x] README、演示脚本、架构说明和复盘采用相同能力边界。
-- [x] GitHub `main` 已合并 PR #5，对应候选提交 `52fbd1a`。
+- [x] GitHub `main` 对应候选提交 `64d4f5a`（标签 `submission-2026-08-07-v2`）。
 
 ## ModelScope 发布验证
 
-- [x] 已设置非密钥变量 `WEATHER_AGENT_VERSION=rc-52fbd1a`。
+- [x] 已设置非密钥变量 `WEATHER_AGENT_VERSION=rc-64d4f5a`。
 - [x] 页面底部运行版本与目标发布标识完全一致。
 - [x] 新会话输入完整计划后完成了真实天气评估。
 - [x] 修改时间后保留其他计划字段，并重新查询、重新判断。
@@ -31,6 +31,8 @@
 - [x] 过去时间被拒绝，没有生成天气适宜性结论。
 - [x] `1000 小时`被活动时长校验拒绝。
 - [x] 标准城市名“北京”直接得到直辖市结果，没有无意义候选。
+- [x] 建议附带知识库来源（`知识库#`），活动不匹配时不输出不适配建议。
+- [x] 风险偏好改变建议口径，风险等级保持稳定。
 
 天气服务故障降级由自动化测试 `test_weather_failure_returns_safe_error_without_recommendation` 覆盖。发布期不通过破坏有效密钥来人为制造线上故障。
 
