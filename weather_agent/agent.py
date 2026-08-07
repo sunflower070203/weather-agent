@@ -5,6 +5,7 @@ from weather_agent.activity import ActivityPlan
 from weather_agent.forecast import ForecastDataError, WeatherForecast
 from weather_agent.geocoding import GeocodingError, LocationCandidate
 from weather_agent.knowledge import DEFAULT_KNOWLEDGE
+from weather_agent.planning import find_clear_window, peak_risks
 from weather_agent.risks import RiskAssessment, assess_weather_risks
 from weather_agent.tjweather import TJWeatherError
 
@@ -26,6 +27,18 @@ PLAN_CHANGE_PREFIXES = (
     "地点改",
     "时长改",
 )
+RISK_NAMES = {
+    "precipitation": "降雨",
+    "wind": "大风",
+    "high_temperature": "高温",
+    "low_temperature": "低温",
+}
+RISK_MITIGATION = {
+    "precipitation": "携带雨具并避开积水路段",
+    "wind": "避开桥梁、空旷与迎风路段",
+    "high_temperature": "增加补水并避开正午高温",
+    "low_temperature": "注意保暖分层与失温风险",
+}
 
 
 @dataclass(frozen=True)
@@ -217,17 +230,50 @@ class WeatherAgent:
         )
         lines.append(f"- 预报起报时间：{forecast.time_init.isoformat()}")
         lines.append(f"- 规则结果：{rule_result}")
+        for risk in peak_risks(risks):
+            lines.append(
+                f"- 风险峰值：{risk.kind} {risk.level} "
+                f"{risk.value:.1f} {risk.unit}（{risk.time:%H:%M}）"
+            )
         if location.is_approximate:
             lines.append("- 天气坐标为城市级近似；")
 
         lines.append("**方案**")
         if risks:
-            lines.extend(
-                (
-                    "1. 方案一：调整活动时间，避开风险较高的时段后重新查询。",
-                    "2. 方案二：改为更短、更易撤离的路线；若风险持续则取消活动。",
-                )
+            window = find_clear_window(
+                forecast.points,
+                self.plan.start_time,
+                self.plan.duration_hours,
             )
+            if window:
+                start, end = window
+                names = "、".join(
+                    RISK_NAMES.get(risk.kind, risk.kind) for risk in risks
+                )
+                lines.append(
+                    "1. 方案一：建议将活动调整到 "
+                    f"{start:%m月%d日 %H:%M} 至 {end:%H:%M}，"
+                    f"该时段未命中{names}风险。"
+                )
+            else:
+                lines.append(
+                    "1. 方案一：调整活动时间，避开风险较高的时段后重新查询。"
+                )
+            mitigations = [
+                RISK_MITIGATION[risk.kind]
+                for risk in risks
+                if risk.kind in RISK_MITIGATION
+            ]
+            if mitigations:
+                lines.append(
+                    "2. 方案二："
+                    + "；".join(dict.fromkeys(mitigations))
+                    + "，并缩短暴露时间；若风险持续则取消活动。"
+                )
+            else:
+                lines.append(
+                    "2. 方案二：改为更短、更易撤离的路线；若风险持续则取消活动。"
+                )
         else:
             lines.extend(
                 (

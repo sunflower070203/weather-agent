@@ -759,5 +759,79 @@
     ],
     "expect_weather_calls": [[116.4, 39.9], [116.4, 39.9]],
     "expect_final_plan": {"risk_preference": "adventurous"}
+  },
+  {
+    "id": "agent.026",
+    "category": "数据化方案",
+    "name": "有风险时给出数据化替代时段",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [
+        {"time": "2026-08-08T08:00:00+08:00", "rain": 3.0},
+        {"time": "2026-08-08T09:00:00+08:00", "rain": 3.0},
+        {"time": "2026-08-08T10:00:00+08:00", "rain": 3.0},
+        {"time": "2026-08-08T11:00:00+08:00"},
+        {"time": "2026-08-08T12:00:00+08:00"},
+        {"time": "2026-08-08T13:00:00+08:00"}
+      ]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["建议将活动调整到", "11:00 至 14:00", "未命中降雨风险", "precipitation medium"]
+      }
+    ]
+  },
+  {
+    "id": "agent.027",
+    "category": "数据化方案",
+    "name": "无替代时段时给出风险峰值",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [
+        {"time": "2026-08-08T08:00:00+08:00", "rain": 8.0},
+        {"time": "2026-08-08T09:00:00+08:00", "rain": 8.0},
+        {"time": "2026-08-08T10:00:00+08:00", "rain": 8.0}
+      ]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["风险峰值：precipitation high 8.0 mm/hr（08:00）", "携带雨具"],
+        "message_not_contains": ["建议将活动调整到"]
+      }
+    ]
   }
 ]

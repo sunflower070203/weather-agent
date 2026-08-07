@@ -500,6 +500,77 @@ class WeatherAgentTests(unittest.TestCase):
         self.assertIn("**方案**", result.message)
         self.assertIn("1. 方案一", result.message)
 
+    def test_risky_recommendation_suggests_data_driven_window(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START, 3)
+        place = candidate("北京", 40.0, 116.4, "北京")
+        payload = {
+            "time_init": "2026-08-04T08:00:00+08:00",
+            "data": [
+                {
+                    "time": f"2026-08-06T{hour:02d}:00:00+08:00",
+                    "wd10m": 180,
+                    "ws10m": 2.0,
+                    "t2m": 25.0,
+                    "rh2m": 60,
+                    "psz": 100000,
+                    "tp": rain,
+                }
+                for hour, rain in (
+                    (8, 3.0),
+                    (9, 3.0),
+                    (10, 3.0),
+                    (11, 0.0),
+                    (12, 0.0),
+                    (13, 0.0),
+                )
+            ],
+        }
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(payload),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertIn("建议将活动调整到", result.message)
+        self.assertIn("11:00 至 14:00", result.message)
+        self.assertIn("未命中降雨风险", result.message)
+
+    def test_risky_recommendation_falls_back_with_peak_evidence(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START, 3)
+        place = candidate("北京", 40.0, 116.4, "北京")
+        payload = {
+            "time_init": "2026-08-04T08:00:00+08:00",
+            "data": [
+                {
+                    "time": f"2026-08-06T{hour:02d}:00:00+08:00",
+                    "wd10m": 180,
+                    "ws10m": 2.0,
+                    "t2m": 25.0,
+                    "rh2m": 60,
+                    "psz": 100000,
+                    "tp": 8.0,
+                }
+                for hour in (8, 9, 10)
+            ],
+        }
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(payload),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertIn("风险峰值：precipitation high 8.0 mm/hr（08:00）", result.message)
+        self.assertIn("携带雨具", result.message)
+        self.assertNotIn("建议将活动调整到", result.message)
+
 
 if __name__ == "__main__":
     unittest.main()
