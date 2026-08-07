@@ -20,6 +20,7 @@ class AdviceEntry:
     activity: str
     topics: tuple[str, ...]
     text: str
+    expert: str = "any"
 
 
 class KnowledgeBase:
@@ -35,6 +36,7 @@ class KnowledgeBase:
                 activity=item["activity"],
                 topics=tuple(item["topics"]),
                 text=item["text"],
+                expert=item.get("expert", "any"),
             )
             for item in raw
         )
@@ -43,11 +45,13 @@ class KnowledgeBase:
     def default(cls):
         return cls.from_json(DEFAULT_KNOWLEDGE_PATH)
 
-    def advice_for(self, activity, topics, limit=2):
+    def advice_for(self, activity, topics, limit=2, expert=None):
         if not topics:
             topics = ("general",)
         matches = []
         for entry in self.entries:
+            if expert is not None and entry.expert != expert:
+                continue
             activity_match = entry.activity == activity
             topic_match = any(topic in entry.topics for topic in topics)
             if not (topic_match and (activity_match or entry.activity == "any")):

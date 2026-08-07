@@ -3,73 +3,133 @@
     "id": "rain-cycling",
     "activity": "cycling",
     "topics": ["precipitation"],
+    "expert": "outdoor-safety",
     "text": "降雨时路面湿滑，建议缩短路线并远离低洼积水路段。"
   },
   {
     "id": "rain-hiking",
     "activity": "hiking",
     "topics": ["precipitation"],
+    "expert": "outdoor-safety",
     "text": "雨天徒步注意防滑，避开山涧与陡坡，必要时改期。"
   },
   {
     "id": "rain-camping",
     "activity": "camping",
     "topics": ["precipitation"],
+    "expert": "gear-advisor",
     "text": "降雨露营需确保帐篷防水，营地避开低洼与河道附近。"
   },
   {
     "id": "wind-cycling",
     "activity": "cycling",
     "topics": ["wind"],
+    "expert": "outdoor-safety",
     "text": "大风骑行建议降低车速，避开桥梁与空旷路段。"
   },
   {
     "id": "wind-hiking",
     "activity": "hiking",
     "topics": ["wind"],
+    "expert": "gear-advisor",
     "text": "大风天气登山注意失温风险，携带防风层并缩短暴露时间。"
   },
   {
     "id": "heat-any",
     "activity": "any",
     "topics": ["high_temperature"],
+    "expert": "outdoor-safety",
     "text": "高温时段建议避开 11:00-15:00，及时补水并注意防晒。"
   },
   {
     "id": "heat-hiking",
     "activity": "hiking",
     "topics": ["high_temperature"],
+    "expert": "gear-advisor",
     "text": "高温徒步增加补水频率，规划阴凉休息点。"
   },
   {
     "id": "heat-camping",
     "activity": "camping",
     "topics": ["high_temperature"],
+    "expert": "gear-advisor",
     "text": "高温露营注意帐篷通风，避免午后长时间暴晒。"
   },
   {
     "id": "cold-cycling",
     "activity": "cycling",
     "topics": ["low_temperature"],
+    "expert": "gear-advisor",
     "text": "低温骑行注意手脚保暖，减少长距离连续骑行。"
   },
   {
     "id": "cold-hiking",
     "activity": "hiking",
     "topics": ["low_temperature"],
+    "expert": "gear-advisor",
     "text": "低温徒步注意分层着装，携带保暖层与热水。"
   },
   {
     "id": "cold-camping",
     "activity": "camping",
     "topics": ["low_temperature"],
+    "expert": "gear-advisor",
     "text": "低温露营建议使用温标合适的睡袋并做好防潮。"
   },
   {
     "id": "general-any",
     "activity": "any",
     "topics": ["general"],
+    "expert": "outdoor-safety",
     "text": "出发前再次核对临近预报，并告知同行者行程信息。"
+  },
+  {
+    "id": "thunder-hiking",
+    "activity": "hiking",
+    "topics": ["precipitation"],
+    "expert": "outdoor-safety",
+    "text": "雷雨时立即离开山顶、开阔地和水域，就近进入建筑物或车内避雷。"
+  },
+  {
+    "id": "thunder-camping",
+    "activity": "camping",
+    "topics": ["precipitation"],
+    "expert": "outdoor-safety",
+    "text": "雷雨预警期间避免在孤立大树下或山脊扎营，优先选择有庇护的营地。"
+  },
+  {
+    "id": "gear-rain-cycling",
+    "activity": "cycling",
+    "topics": ["precipitation"],
+    "expert": "gear-advisor",
+    "text": "雨天骑行备好雨衣，预留更长刹车距离，注意积水与井盖。"
+  },
+  {
+    "id": "gear-rain-hiking",
+    "activity": "hiking",
+    "topics": ["precipitation"],
+    "expert": "gear-advisor",
+    "text": "雨天徒步穿防水鞋并备替换干袜，长时间湿脚易磨损起泡。"
+  },
+  {
+    "id": "gear-heat-cycling",
+    "activity": "cycling",
+    "topics": ["high_temperature"],
+    "expert": "gear-advisor",
+    "text": "高温骑行每小时补水并适量补充电解质，穿浅色透气骑行服。"
+  },
+  {
+    "id": "gear-heat-hiking",
+    "activity": "hiking",
+    "topics": ["high_temperature"],
+    "expert": "gear-advisor",
+    "text": "高温徒步随身带足饮水，遮阳帽与防晒霜列为必带。"
+  },
+  {
+    "id": "gear-general-any",
+    "activity": "any",
+    "topics": ["general"],
+    "expert": "gear-advisor",
+    "text": "出发前检查车辆与装备状态，确认雨具、头灯、充电宝和应急物品随身携带。"
   }
 ]
-
