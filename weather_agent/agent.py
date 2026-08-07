@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from weather_agent.activity import ActivityPlan
+from weather_agent.experts import EXPERT_SKILLS, ExpertContext
 from weather_agent.forecast import ForecastDataError, WeatherForecast
 from weather_agent.geocoding import GeocodingError, LocationCandidate
 from weather_agent.knowledge import DEFAULT_KNOWLEDGE
-from weather_agent.planning import find_clear_window, peak_risks
 from weather_agent.risks import RiskAssessment, assess_weather_risks
 from weather_agent.tjweather import TJWeatherError
 
@@ -27,18 +27,6 @@ PLAN_CHANGE_PREFIXES = (
     "地点改",
     "时长改",
 )
-RISK_NAMES = {
-    "precipitation": "降雨",
-    "wind": "大风",
-    "high_temperature": "高温",
-    "low_temperature": "低温",
-}
-RISK_MITIGATION = {
-    "precipitation": "携带雨具并避开积水路段",
-    "wind": "避开桥梁、空旷与迎风路段",
-    "high_temperature": "增加补水并避开正午高温",
-    "low_temperature": "注意保暖分层与失温风险",
-}
 
 
 @dataclass(frozen=True)
@@ -207,92 +195,19 @@ class WeatherAgent:
         )
 
     def _format_recommendation(self, location, forecast, points, risks):
-        risk_text = "；".join(
-            f"{risk.kind} {risk.level}：{risk.value:.1f} {risk.unit}"
-            for risk in risks
+        context = ExpertContext(
+            plan=self.plan,
+            location=location,
+            forecast=forecast,
+            points=points,
+            risks=risks,
+            knowledge=self.knowledge,
         )
-        rule_result = risk_text or "未识别到明显天气风险"
-
-        lines = []
-        if not risks:
-            lines.append("已经帮你把这次活动的天气看好了，整体比较顺利。")
-            lines.append("**结论**：当前规则未识别到明显天气风险。")
-        else:
-            lines.append("已经帮你把这次活动的天气看过了，有几个点需要留意。")
-            lines.append(f"**结论**：检测到天气风险：{risk_text}。")
-
-        lines.append("**决策依据**：")
-        lines.append(f"- 地点：{location.display_name}")
-        lines.append(
-            "- 活动时段："
-            f"{self.plan.start_time.isoformat()} 起 "
-            f"{self.plan.duration_hours:g} 小时"
-        )
-        lines.append(f"- 预报起报时间：{forecast.time_init.isoformat()}")
-        lines.append(f"- 规则结果：{rule_result}")
-        for risk in peak_risks(risks):
-            lines.append(
-                f"- 风险峰值：{risk.kind} {risk.level} "
-                f"{risk.value:.1f} {risk.unit}（{risk.time:%H:%M}）"
-            )
-        if location.is_approximate:
-            lines.append("- 天气坐标为城市级近似；")
-
-        lines.append("**方案**")
-        if risks:
-            window = find_clear_window(
-                forecast.points,
-                self.plan.start_time,
-                self.plan.duration_hours,
-            )
-            if window:
-                start, end = window
-                names = "、".join(
-                    RISK_NAMES.get(risk.kind, risk.kind) for risk in risks
-                )
-                lines.append(
-                    "1. 方案一：建议将活动调整到 "
-                    f"{start:%m月%d日 %H:%M} 至 {end:%H:%M}，"
-                    f"该时段未命中{names}风险。"
-                )
-            else:
-                lines.append(
-                    "1. 方案一：调整活动时间，避开风险较高的时段后重新查询。"
-                )
-            mitigations = [
-                RISK_MITIGATION[risk.kind]
-                for risk in risks
-                if risk.kind in RISK_MITIGATION
-            ]
-            if mitigations:
-                lines.append(
-                    "2. 方案二："
-                    + "；".join(dict.fromkeys(mitigations))
-                    + "，并缩短暴露时间；若风险持续则取消活动。"
-                )
-            else:
-                lines.append(
-                    "2. 方案二：改为更短、更易撤离的路线；若风险持续则取消活动。"
-                )
-        else:
-            lines.extend(
-                (
-                    "1. 方案一：按原计划进行，并在出发前再次核对临近预报。",
-                    "2. 方案二：保留室内或缩短路线作为天气突变时的备选。",
-                )
-            )
-
-        topics = [risk.kind for risk in risks] or ["general"]
-        advice = self.knowledge.advice_for(self.plan.activity_type, topics)
-        if advice:
-            lines.append("**补充建议**")
-            lines.extend(
-                f"- {entry.text}（知识库#{entry.id}）" for entry in advice
-            )
-
-        if self.plan.risk_preference == "conservative":
-            lines.append("**偏好提示**：你偏好保守，建议优先采用更稳妥的备选方案。")
-        elif self.plan.risk_preference == "adventurous":
-            lines.append("**偏好提示**：你接受较高风险，但请仍以数据结果为准。")
-
-        return "\n".join(lines)
+        sections = []
+        for expert in EXPERT_SKILLS:
+            if not expert.should_render(context):
+                continue
+            rendered = expert.render(context)
+            if rendered:
+                sections.append(rendered)
+        return "\n\n".join(sections)

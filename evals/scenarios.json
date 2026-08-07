@@ -833,5 +833,69 @@
         "message_not_contains": ["建议将活动调整到"]
       }
     ]
+  },
+  {
+    "id": "agent.028",
+    "category": "专家技能",
+    "name": "雨日推荐由三位专家分工输出",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "camping",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00", "rain": 3.0}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["**气象顾问**", "**户外安全顾问**", "**装备与补给顾问**", "precipitation medium", "知识库#"]
+      }
+    ],
+    "expect_weather_calls": [[116.4, 39.9]]
+  },
+  {
+    "id": "agent.029",
+    "category": "专家技能",
+    "name": "晴日推荐仍由三位专家分工输出",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "hiking",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["**气象顾问**", "**户外安全顾问**", "**装备与补给顾问**", "未识别到明显天气风险"]
+      }
+    ],
+    "expect_weather_calls": [[116.4, 39.9]]
   }
 ]
