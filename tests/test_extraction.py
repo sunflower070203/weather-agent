@@ -77,6 +77,17 @@ class ActivityExtractorTests(unittest.TestCase):
 
         self.assertEqual(updated.risk_preference, "conservative")
 
+    def test_normalizes_risk_preference_case_and_space(self):
+        extractor = ActivityExtractor(_FakeModel({"risk_preference": " CONSERVATIVE "}))
+
+        updated = extractor.update_plan(
+            ActivityPlan(),
+            "我比较怕热，想保守一点",
+            now=datetime.fromisoformat("2026-08-04T10:00:00+08:00"),
+        )
+
+        self.assertEqual(updated.risk_preference, "conservative")
+
     def test_rejects_unknown_risk_preference_from_model(self):
         extractor = ActivityExtractor(_FakeModel({"risk_preference": "extreme"}))
 

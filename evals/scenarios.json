@@ -688,5 +688,76 @@
         "message_contains": ["precipitation medium", "保守"]
       }
     ]
+  },
+  {
+    "id": "agent.024",
+    "category": "知识建议",
+    "name": "主题匹配但不适合活动时不输出建议",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "camping",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00", "wind": 9.0}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["wind medium"],
+        "message_not_contains": ["补充建议"]
+      }
+    ]
+  },
+  {
+    "id": "agent.025",
+    "category": "偏好记忆",
+    "name": "偏好跨轮次保持并触发重评估",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      },
+      {"risk_preference": "adventurous"}
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_not_contains": ["偏好提示"]
+      },
+      {
+        "message": "我接受较高风险，不用太保守",
+        "expect_kind": "recommendation",
+        "message_contains": ["接受较高风险"]
+      }
+    ],
+    "expect_weather_calls": [[116.4, 39.9], [116.4, 39.9]],
+    "expect_final_plan": {"risk_preference": "adventurous"}
   }
 ]

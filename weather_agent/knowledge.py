@@ -50,7 +50,7 @@ class KnowledgeBase:
         for entry in self.entries:
             activity_match = entry.activity == activity
             topic_match = any(topic in entry.topics for topic in topics)
-            if not (topic_match or activity_match):
+            if not (topic_match and (activity_match or entry.activity == "any")):
                 continue
             score = 0
             if activity_match:

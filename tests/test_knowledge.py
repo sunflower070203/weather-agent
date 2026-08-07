@@ -21,6 +21,10 @@ class KnowledgeBaseTests(unittest.TestCase):
         entries = KnowledgeBase(ENTRIES).advice_for("hiking", [])
         self.assertEqual([entry.id for entry in entries], ["general-any"])
 
+    def test_excludes_topic_only_advice_for_other_activity(self):
+        entries = KnowledgeBase(ENTRIES).advice_for("hiking", ["precipitation"])
+        self.assertEqual(entries, [])
+
     def test_limits_results_and_orders_by_score(self):
         entries = KnowledgeBase(ENTRIES).advice_for(
             "camping", ["high_temperature"], limit=2
@@ -35,4 +39,3 @@ class KnowledgeBaseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

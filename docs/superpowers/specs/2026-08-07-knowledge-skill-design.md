@@ -40,7 +40,7 @@ tool outdoor_advice(activity, topics) -> AdviceWithSource
 
 ## 检索算法
 
-- 活动精确匹配或命中任一风险主题才进入候选；
+- 活动相关（精确或 `any`）且命中任一风险主题（`general` 视为主题）才进入候选；
 - 活动精确匹配 2 分，`any` 条目 1 分；
 - 命中任一风险主题 3 分；
 - 按分数降序、`id` 升序排序，取前 2 条。
