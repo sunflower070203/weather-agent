@@ -448,6 +448,39 @@ class WeatherAgentTests(unittest.TestCase):
         self.assertEqual(result.kind, "recommendation")
         self.assertIn("知识库#", result.message)
 
+    def test_conservative_preference_changes_wording_not_risk_verdict(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan(
+            "cycling", "北京", START, 3, risk_preference="conservative"
+        )
+        place = candidate("北京", 40.0, 116.4, "北京")
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(forecast_payload(rain=3.0)),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertIn("保守", result.message)
+        self.assertIn("precipitation medium", result.message)
+
+    def test_moderate_preference_has_no_preference_line(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("cycling", "北京", START, 3)
+        place = candidate("北京", 40.0, 116.4, "北京")
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(forecast_payload()),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertNotIn("偏好提示", result.message)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -46,6 +46,10 @@ class ActivityPlanTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duration_hours"):
             ActivityPlan(duration_hours=0)
 
+    def test_rejects_unknown_risk_preference(self):
+        with self.assertRaisesRegex(ValueError, "risk_preference"):
+            ActivityPlan(risk_preference="extreme")
+
     def test_is_ready_when_all_required_fields_are_present(self):
         plan = ActivityPlan(
             activity_type="camping",

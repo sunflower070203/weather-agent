@@ -3,6 +3,7 @@ from datetime import datetime
 
 
 SUPPORTED_ACTIVITY_TYPES = {"cycling", "hiking", "camping"}
+ALLOWED_RISK_PREFERENCES = {"conservative", "moderate", "adventurous"}
 REQUIRED_FIELDS = ("activity_type", "location", "start_time", "duration_hours")
 QUESTIONS = {
     "activity_type": "你计划骑行、徒步还是露营？",
@@ -29,6 +30,13 @@ class ActivityPlan:
             raise ValueError("activity_type must be cycling, hiking, or camping")
         if self.duration_hours is not None and self.duration_hours <= 0:
             raise ValueError("duration_hours must be positive")
+        if (
+            self.risk_preference is not None
+            and self.risk_preference not in ALLOWED_RISK_PREFERENCES
+        ):
+            raise ValueError(
+                "risk_preference must be conservative, moderate, or adventurous"
+            )
 
     def missing_fields(self):
         return tuple(field for field in REQUIRED_FIELDS if getattr(self, field) is None)

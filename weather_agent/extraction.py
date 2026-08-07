@@ -11,6 +11,18 @@ ALLOWED_UPDATE_FIELDS = {
     "risk_preference",
 }
 
+RISK_PREFERENCE_ALIASES = {
+    "conservative": "conservative",
+    "保守": "conservative",
+    "稳妥": "conservative",
+    "谨慎": "conservative",
+    "moderate": "moderate",
+    "适中": "moderate",
+    "adventurous": "adventurous",
+    "冒险": "adventurous",
+    "激进": "adventurous",
+}
+
 
 class ActivityExtractionError(ValueError):
     """Raised when model output cannot safely update an activity plan."""
@@ -33,6 +45,9 @@ class ActivityExtractor:
                     "Allowed fields: activity_type, location, start_time, "
                     "duration_hours, participant_profile, risk_preference. "
                     "Use an ISO-8601 timestamp with timezone for start_time. "
+                    "Extract risk_preference (conservative, moderate, "
+                    "adventurous) only when the user expresses a risk "
+                    "attitude; omit otherwise. "
                     "Omit fields not stated or changed by the user."
                 ),
             },
@@ -56,6 +71,13 @@ class ActivityExtractor:
             for key, value in extracted.items()
             if key in ALLOWED_UPDATE_FIELDS and value is not None
         }
+        if "risk_preference" in updates:
+            normalized = RISK_PREFERENCE_ALIASES.get(
+                str(updates["risk_preference"]).strip().lower()
+            )
+            if normalized is None:
+                raise ActivityExtractionError("invalid risk preference")
+            updates["risk_preference"] = normalized
         try:
             return plan.with_updates(updates)
         except (TypeError, ValueError) as exc:

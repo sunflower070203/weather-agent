@@ -656,5 +656,37 @@
         "message_contains": ["high_temperature medium", "知识库#"]
       }
     ]
+  },
+  {
+    "id": "agent.023",
+    "category": "偏好记忆",
+    "name": "保守偏好改变建议口径但保持阈值稳定",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3,
+        "risk_preference": "conservative"
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00", "rain": 3.0}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["precipitation medium", "保守"]
+      }
+    ]
   }
 ]

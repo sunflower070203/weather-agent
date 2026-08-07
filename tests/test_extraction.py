@@ -66,6 +66,27 @@ class ActivityExtractorTests(unittest.TestCase):
         self.assertEqual(updated.location, "北京")
         self.assertFalse(hasattr(updated, "system_prompt"))
 
+    def test_normalizes_risk_preference_alias(self):
+        extractor = ActivityExtractor(_FakeModel({"risk_preference": "保守"}))
+
+        updated = extractor.update_plan(
+            ActivityPlan(),
+            "我比较怕热，想保守一点",
+            now=datetime.fromisoformat("2026-08-04T10:00:00+08:00"),
+        )
+
+        self.assertEqual(updated.risk_preference, "conservative")
+
+    def test_rejects_unknown_risk_preference_from_model(self):
+        extractor = ActivityExtractor(_FakeModel({"risk_preference": "extreme"}))
+
+        with self.assertRaisesRegex(ActivityExtractionError, "invalid risk preference"):
+            extractor.update_plan(
+                ActivityPlan(),
+                "我比较怕热",
+                now=datetime.fromisoformat("2026-08-04T10:00:00+08:00"),
+            )
+
 
 class _FakeModel:
     def __init__(self, result):

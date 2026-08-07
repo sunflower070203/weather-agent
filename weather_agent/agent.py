@@ -216,4 +216,8 @@ class WeatherAgent:
             body += "\n补充建议：" + "；".join(
                 f"{entry.text}（知识库#{entry.id}）" for entry in advice
             )
+        if self.plan.risk_preference == "conservative":
+            body += "\n偏好提示：你偏好保守，建议优先采用更稳妥的备选方案。"
+        elif self.plan.risk_preference == "adventurous":
+            body += "\n偏好提示：你接受较高风险，但请仍以数据结果为准。"
         return body
