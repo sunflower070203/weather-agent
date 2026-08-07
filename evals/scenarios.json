@@ -625,5 +625,36 @@
         "message_contains": ["城市级近似", "决策依据"]
       }
     ]
+  },
+  {
+    "id": "agent.022",
+    "category": "知识建议",
+    "name": "风险建议附带知识库来源",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "camping",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00", "temperature": 36.0}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["high_temperature medium", "知识库#"]
+      }
+    ]
   }
 ]

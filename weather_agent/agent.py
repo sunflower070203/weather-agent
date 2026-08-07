@@ -4,6 +4,7 @@ from datetime import timedelta
 from weather_agent.activity import ActivityPlan
 from weather_agent.forecast import ForecastDataError, WeatherForecast
 from weather_agent.geocoding import GeocodingError, LocationCandidate
+from weather_agent.knowledge import DEFAULT_KNOWLEDGE
 from weather_agent.risks import RiskAssessment, assess_weather_risks
 from weather_agent.tjweather import TJWeatherError
 
@@ -37,10 +38,11 @@ class AgentResult:
 
 
 class WeatherAgent:
-    def __init__(self, extractor, geocoder, weather):
+    def __init__(self, extractor, geocoder, weather, knowledge=None):
         self.extractor = extractor
         self.geocoder = geocoder
         self.weather = weather
+        self.knowledge = knowledge if knowledge is not None else DEFAULT_KNOWLEDGE
         self.plan = ActivityPlan()
         self.pending_locations = ()
 
@@ -197,14 +199,21 @@ class WeatherAgent:
             f"规则结果：{rule_result}。"
         )
         if not risks:
-            return (
+            body = (
                 f"当前规则未识别到明显天气风险。{evidence}\n"
                 "方案一：按原计划进行，并在出发前再次核对临近预报。\n"
                 "方案二：保留室内或缩短路线作为天气突变时的备选。"
             )
-
-        return (
-            f"检测到天气风险：{risk_text}。{evidence}\n"
-            "方案一：调整活动时间，避开风险较高的时段后重新查询。\n"
-            "方案二：改为更短、更易撤离的路线；若风险持续则取消活动。"
-        )
+        else:
+            body = (
+                f"检测到天气风险：{risk_text}。{evidence}\n"
+                "方案一：调整活动时间，避开风险较高的时段后重新查询。\n"
+                "方案二：改为更短、更易撤离的路线；若风险持续则取消活动。"
+            )
+        topics = [risk.kind for risk in risks] or ["general"]
+        advice = self.knowledge.advice_for(self.plan.activity_type, topics)
+        if advice:
+            body += "\n补充建议：" + "；".join(
+                f"{entry.text}（知识库#{entry.id}）" for entry in advice
+            )
+        return body

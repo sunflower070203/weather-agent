@@ -1,0 +1,75 @@
+[
+  {
+    "id": "rain-cycling",
+    "activity": "cycling",
+    "topics": ["precipitation"],
+    "text": "降雨时路面湿滑，建议缩短路线并远离低洼积水路段。"
+  },
+  {
+    "id": "rain-hiking",
+    "activity": "hiking",
+    "topics": ["precipitation"],
+    "text": "雨天徒步注意防滑，避开山涧与陡坡，必要时改期。"
+  },
+  {
+    "id": "rain-camping",
+    "activity": "camping",
+    "topics": ["precipitation"],
+    "text": "降雨露营需确保帐篷防水，营地避开低洼与河道附近。"
+  },
+  {
+    "id": "wind-cycling",
+    "activity": "cycling",
+    "topics": ["wind"],
+    "text": "大风骑行建议降低车速，避开桥梁与空旷路段。"
+  },
+  {
+    "id": "wind-hiking",
+    "activity": "hiking",
+    "topics": ["wind"],
+    "text": "大风天气登山注意失温风险，携带防风层并缩短暴露时间。"
+  },
+  {
+    "id": "heat-any",
+    "activity": "any",
+    "topics": ["high_temperature"],
+    "text": "高温时段建议避开 11:00-15:00，及时补水并注意防晒。"
+  },
+  {
+    "id": "heat-hiking",
+    "activity": "hiking",
+    "topics": ["high_temperature"],
+    "text": "高温徒步增加补水频率，规划阴凉休息点。"
+  },
+  {
+    "id": "heat-camping",
+    "activity": "camping",
+    "topics": ["high_temperature"],
+    "text": "高温露营注意帐篷通风，避免午后长时间暴晒。"
+  },
+  {
+    "id": "cold-cycling",
+    "activity": "cycling",
+    "topics": ["low_temperature"],
+    "text": "低温骑行注意手脚保暖，减少长距离连续骑行。"
+  },
+  {
+    "id": "cold-hiking",
+    "activity": "hiking",
+    "topics": ["low_temperature"],
+    "text": "低温徒步注意分层着装，携带保暖层与热水。"
+  },
+  {
+    "id": "cold-camping",
+    "activity": "camping",
+    "topics": ["low_temperature"],
+    "text": "低温露营建议使用温标合适的睡袋并做好防潮。"
+  },
+  {
+    "id": "general-any",
+    "activity": "any",
+    "topics": ["general"],
+    "text": "出发前再次核对临近预报，并告知同行者行程信息。"
+  }
+]
+

@@ -432,6 +432,22 @@ class WeatherAgentTests(unittest.TestCase):
         self.assertEqual(geocoder.queries, [])
         self.assertEqual(weather.calls, [])
 
+    def test_recommendation_appends_knowledge_advice_with_source(self):
+        from weather_agent.agent import WeatherAgent
+
+        plan = ActivityPlan("camping", "北京", START, 3)
+        place = candidate("北京", 40.0, 116.4, "北京")
+        agent = WeatherAgent(
+            FakeExtractor([plan]),
+            FakeGeocoder((place,)),
+            FakeWeather(forecast_payload(temperature=36.0)),
+        )
+
+        result = agent.handle_message("完整计划", now=START)
+
+        self.assertEqual(result.kind, "recommendation")
+        self.assertIn("知识库#", result.message)
+
 
 if __name__ == "__main__":
     unittest.main()
