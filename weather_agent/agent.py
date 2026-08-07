@@ -184,40 +184,57 @@ class WeatherAgent:
         )
 
     def _format_recommendation(self, location, forecast, points, risks):
-        approximation = (
-            "天气坐标为城市级近似；" if location.is_approximate else ""
-        )
         risk_text = "；".join(
             f"{risk.kind} {risk.level}：{risk.value:.1f} {risk.unit}"
             for risk in risks
         )
         rule_result = risk_text or "未识别到明显天气风险"
-        evidence = (
-            f"决策依据：地点：{location.display_name}；活动时段："
-            f"{self.plan.start_time.isoformat()} 起 {self.plan.duration_hours:g} 小时；"
-            f"{approximation}预报起报时间：{forecast.time_init.isoformat()}；"
-            f"规则结果：{rule_result}。"
-        )
+
+        lines = []
         if not risks:
-            body = (
-                f"当前规则未识别到明显天气风险。{evidence}\n"
-                "方案一：按原计划进行，并在出发前再次核对临近预报。\n"
-                "方案二：保留室内或缩短路线作为天气突变时的备选。"
+            lines.append("**结论**：当前规则未识别到明显天气风险。")
+        else:
+            lines.append(f"**结论**：检测到天气风险：{risk_text}。")
+
+        lines.append("**决策依据**：")
+        lines.append(f"- 地点：{location.display_name}")
+        lines.append(
+            "- 活动时段："
+            f"{self.plan.start_time.isoformat()} 起 "
+            f"{self.plan.duration_hours:g} 小时"
+        )
+        lines.append(f"- 预报起报时间：{forecast.time_init.isoformat()}")
+        lines.append(f"- 规则结果：{rule_result}")
+        if location.is_approximate:
+            lines.append("- 天气坐标为城市级近似；")
+
+        lines.append("**方案**")
+        if risks:
+            lines.extend(
+                (
+                    "1. 方案一：调整活动时间，避开风险较高的时段后重新查询。",
+                    "2. 方案二：改为更短、更易撤离的路线；若风险持续则取消活动。",
+                )
             )
         else:
-            body = (
-                f"检测到天气风险：{risk_text}。{evidence}\n"
-                "方案一：调整活动时间，避开风险较高的时段后重新查询。\n"
-                "方案二：改为更短、更易撤离的路线；若风险持续则取消活动。"
+            lines.extend(
+                (
+                    "1. 方案一：按原计划进行，并在出发前再次核对临近预报。",
+                    "2. 方案二：保留室内或缩短路线作为天气突变时的备选。",
+                )
             )
+
         topics = [risk.kind for risk in risks] or ["general"]
         advice = self.knowledge.advice_for(self.plan.activity_type, topics)
         if advice:
-            body += "\n补充建议：" + "；".join(
-                f"{entry.text}（知识库#{entry.id}）" for entry in advice
+            lines.append("**补充建议**")
+            lines.extend(
+                f"- {entry.text}（知识库#{entry.id}）" for entry in advice
             )
+
         if self.plan.risk_preference == "conservative":
-            body += "\n偏好提示：你偏好保守，建议优先采用更稳妥的备选方案。"
+            lines.append("**偏好提示**：你偏好保守，建议优先采用更稳妥的备选方案。")
         elif self.plan.risk_preference == "adventurous":
-            body += "\n偏好提示：你接受较高风险，但请仍以数据结果为准。"
-        return body
+            lines.append("**偏好提示**：你接受较高风险，但请仍以数据结果为准。")
+
+        return "\n".join(lines)

@@ -45,6 +45,12 @@ APP_CSS = """
   padding: 14px;
 }
 #plan-panel { border-top: 5px solid var(--forest); }
+#capabilities {
+  border-top: 1px solid rgba(23, 59, 50, .16);
+  margin-top: 18px;
+  padding-top: 12px;
+}
+#capabilities ul { padding-left: 1.2em; color: #52665f; }
 #send-button { background: var(--signal) !important; color: white !important; }
 #reset-button { border-color: var(--forest) !important; color: var(--forest) !important; }
 .data-note {
@@ -163,7 +169,7 @@ def build_app(*, version=None):
                 )
                 with gr.Row():
                     message = gr.Textbox(
-                        placeholder="例如：8月6日上午8点在北京骑行3小时",
+                        placeholder="例如：明天上午8点在北京骑行3小时",
                         show_label=False,
                         scale=8,
                         container=False,
@@ -183,12 +189,26 @@ def build_app(*, version=None):
 - 修改时间或地点后，Agent 会重新查询并评估。
 """
                 )
+                gr.Markdown(
+                    """
+### 已启用能力
+
+- 自然语言理解：解析口语活动描述
+- 多轮状态：逐项追问并保留活动计划
+- 天气工具：中科天机逐小时真实数据
+- 风险规则：降雨、大风、高温、低温确定性判断
+- 知识库建议：12 条带来源的活动建议
+- 风险偏好：保守、适中、冒险口径
+- 边界：城市级近似，不替代官方预警
+""",
+                    elem_id="capabilities",
+                )
 
         gr.Examples(
             examples=[
-                ["2026年8月6日上午8点在北京奥林匹克森林公园骑行3小时"],
-                ["周六上午想去天津徒步，大约4小时"],
-                ["这周末在上海露营一晚"],
+                ["明天上午8点在北京奥林匹克森林公园骑行3小时"],
+                ["后天想去天津徒步，大约4小时"],
+                ["下周末在上海露营一晚"],
             ],
             inputs=message,
             label="快速示例",
