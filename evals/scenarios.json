@@ -1,0 +1,629 @@
+[
+  {
+    "id": "agent.001",
+    "category": "信息收集",
+    "name": "信息不足时逐项追问且不调用工具",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {"activity_type": "cycling"},
+      {"location": "北京"},
+      {"start_time": "2026-08-08T08:00:00+08:00"},
+      {"duration_hours": 3}
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "我想骑行", "expect_kind": "question", "message_contains": ["活动地点"]},
+      {"message": "在北京", "expect_kind": "question", "message_contains": ["开始"]},
+      {"message": "周六上午8点", "expect_kind": "question", "message_contains": ["小时"]},
+      {"message": "3小时", "expect_kind": "recommendation"}
+    ],
+    "expect_geocoder_queries": ["北京"],
+    "expect_weather_calls": [[116.4, 39.9]],
+    "expect_final_plan": {
+      "activity_type": "cycling",
+      "location": "北京",
+      "duration_hours": 3.0
+    }
+  },
+  {
+    "id": "agent.002",
+    "category": "信息收集",
+    "name": "一次性完整计划直接评估",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "hiking",
+        "location": "天津",
+        "start_time": "2026-08-08T09:00:00+08:00",
+        "duration_hours": 4
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "天津", "latitude": 39.1, "longitude": 117.2, "admin1": "天津市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T09:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "recommendation", "message_contains": ["决策依据"]}
+    ],
+    "expect_geocoder_queries": ["天津"],
+    "expect_weather_calls": [[117.2, 39.1]],
+    "expect_final_plan": {
+      "activity_type": "hiking",
+      "location": "天津",
+      "duration_hours": 4.0
+    }
+  },
+  {
+    "id": "agent.003",
+    "category": "信息收集",
+    "name": "仅标点输入不调用模型",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [],
+    "geocoder": {"results": []},
+    "weather": {"points": []},
+    "steps": [
+      {"message": "？！……", "expect_kind": "question", "message_contains": ["有效"]}
+    ],
+    "expect_extractor_calls": 0,
+    "expect_no_weather_calls": true,
+    "expect_final_plan": {"activity_type": null}
+  },
+  {
+    "id": "agent.004",
+    "category": "地点确认",
+    "name": "多地点候选必须由用户确认",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "森林公园",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "天津森林公园", "latitude": 39.1, "longitude": 117.2, "admin1": "天津", "country": "中国", "timezone": "Asia/Shanghai"},
+          {"name": "北京森林公园", "latitude": 40.0, "longitude": 116.4, "admin1": "北京", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "location_choice", "message_contains": ["1.", "2."]},
+      {"message": "2", "expect_kind": "recommendation"}
+    ],
+    "expect_geocoder_queries": ["森林公园"],
+    "expect_weather_calls": [[116.4, 40.0]]
+  },
+  {
+    "id": "agent.005",
+    "category": "地点确认",
+    "name": "中文序数词选择候选",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "森林公园",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "天津森林公园", "latitude": 39.1, "longitude": 117.2, "admin1": "天津", "country": "中国", "timezone": "Asia/Shanghai"},
+          {"name": "北京森林公园", "latitude": 40.0, "longitude": 116.4, "admin1": "北京", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "location_choice"},
+      {"message": "第二个", "expect_kind": "recommendation"}
+    ],
+    "expect_weather_calls": [[116.4, 40.0]]
+  },
+  {
+    "id": "agent.006",
+    "category": "地点确认",
+    "name": "唯一名称片段选择候选",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "森林公园",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "天津森林公园", "latitude": 39.1, "longitude": 117.2, "admin1": "天津", "country": "中国", "timezone": "Asia/Shanghai"},
+          {"name": "北京森林公园", "latitude": 40.0, "longitude": 116.4, "admin1": "北京", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "location_choice"},
+      {"message": "选北京那个", "expect_kind": "recommendation"}
+    ],
+    "expect_weather_calls": [[116.4, 40.0]]
+  },
+  {
+    "id": "agent.007",
+    "category": "地点确认",
+    "name": "无效序号不改变候选状态",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "森林公园",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "天津森林公园", "latitude": 39.1, "longitude": 117.2, "admin1": "天津", "country": "中国", "timezone": "Asia/Shanghai"},
+          {"name": "北京森林公园", "latitude": 40.0, "longitude": 116.4, "admin1": "北京", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "location_choice"},
+      {"message": "0", "expect_kind": "location_choice"},
+      {"message": "第两个", "expect_kind": "location_choice"},
+      {"message": "2", "expect_kind": "recommendation"}
+    ],
+    "expect_weather_calls": [[116.4, 40.0]]
+  },
+  {
+    "id": "agent.008",
+    "category": "地点确认",
+    "name": "都不是只清除地点且保留其余计划",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "森林公园",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "天津森林公园", "latitude": 39.1, "longitude": 117.2, "admin1": "天津", "country": "中国", "timezone": "Asia/Shanghai"},
+          {"name": "北京森林公园", "latitude": 40.0, "longitude": 116.4, "admin1": "北京", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "location_choice"},
+      {"message": "都不是", "expect_kind": "question", "message_contains": ["更具体"]}
+    ],
+    "expect_no_weather_calls": true,
+    "expect_final_plan": {
+      "activity_type": "cycling",
+      "location": null,
+      "duration_hours": 3.0
+    }
+  },
+  {
+    "id": "agent.009",
+    "category": "地点确认",
+    "name": "候选状态改写地点会重新进入提取与查询",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "森林公园",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      },
+      {"location": "北京奥森"}
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "天津森林公园", "latitude": 39.1, "longitude": 117.2, "admin1": "天津", "country": "中国", "timezone": "Asia/Shanghai"},
+          {"name": "北京森林公园", "latitude": 40.0, "longitude": 116.4, "admin1": "北京", "country": "中国", "timezone": "Asia/Shanghai"}
+        ],
+        [
+          {"name": "北京奥森", "latitude": 40.0, "longitude": 116.4, "admin1": "北京", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "location_choice"},
+      {"message": "改成北京奥森", "expect_kind": "recommendation", "message_contains": ["决策依据"]}
+    ],
+    "expect_geocoder_queries": ["森林公园", "北京奥森"],
+    "expect_weather_calls": [[116.4, 40.0]],
+    "expect_final_plan": {"location": "北京奥森"}
+  },
+  {
+    "id": "agent.010",
+    "category": "计划修改与重评估",
+    "name": "修改时间后保留其余字段并重新评估",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      },
+      {"start_time": "2026-08-08T14:00:00+08:00"}
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [
+        {"time": "2026-08-08T08:00:00+08:00"},
+        {"time": "2026-08-08T14:00:00+08:00", "temperature": 35.5}
+      ]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "recommendation"},
+      {"message": "改成下午两点，其他不变", "expect_kind": "recommendation", "message_contains": ["决策依据"]}
+    ],
+    "expect_geocoder_queries": ["北京", "北京"],
+    "expect_weather_calls": [[116.4, 39.9], [116.4, 39.9]],
+    "expect_final_plan": {
+      "activity_type": "cycling",
+      "location": "北京",
+      "start_time": "2026-08-08T14:00:00+08:00",
+      "duration_hours": 3.0
+    }
+  },
+  {
+    "id": "agent.011",
+    "category": "计划修改与重评估",
+    "name": "修改活动类型保留地点与时间",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      },
+      {"activity_type": "camping"}
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "recommendation"},
+      {"message": "改成露营，其他不变", "expect_kind": "recommendation"}
+    ],
+    "expect_final_plan": {
+      "activity_type": "camping",
+      "location": "北京",
+      "start_time": "2026-08-08T08:00:00+08:00",
+      "duration_hours": 3.0
+    }
+  },
+  {
+    "id": "agent.012",
+    "category": "安全拒绝",
+    "name": "过去时间被拒绝且不查询地点",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-04T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {"results": []},
+    "weather": {"points": []},
+    "steps": [
+      {"message": "完整计划", "expect_kind": "question", "message_contains": ["已经过去"]}
+    ],
+    "expect_geocoder_queries": [],
+    "expect_no_weather_calls": true
+  },
+  {
+    "id": "agent.013",
+    "category": "安全拒绝",
+    "name": "超过168小时的活动时长被拒绝",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 1000
+      }
+    ],
+    "geocoder": {"results": []},
+    "weather": {"points": []},
+    "steps": [
+      {"message": "完整计划", "expect_kind": "question", "message_contains": ["168"]}
+    ],
+    "expect_geocoder_queries": [],
+    "expect_no_weather_calls": true
+  },
+  {
+    "id": "agent.014",
+    "category": "安全拒绝",
+    "name": "预报范围外建议调整时间",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T15:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "error", "message_contains": ["调整活动时间"]}
+    ],
+    "expect_weather_calls": [[116.4, 39.9]]
+  },
+  {
+    "id": "agent.015",
+    "category": "安全拒绝",
+    "name": "对话内重新开始清除全部状态",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {"message": "完整计划", "expect_kind": "recommendation"},
+      {"message": "重新开始", "expect_kind": "reset"},
+      {"message": "我想骑行", "expect_kind": "question", "message_contains": ["骑行、徒步还是露营"]}
+    ],
+    "expect_weather_calls": [[116.4, 39.9]],
+    "expect_final_plan": {"activity_type": null, "location": null}
+  },
+  {
+    "id": "agent.016",
+    "category": "降级",
+    "name": "地理编码失败保留计划并提示重试",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {"results": [], "error": "GeocodingError"},
+    "weather": {"points": []},
+    "steps": [
+      {"message": "完整计划", "expect_kind": "error", "message_contains": ["地点查询失败", "重试"]}
+    ],
+    "expect_no_weather_calls": true,
+    "expect_final_plan": {"location": "北京"}
+  },
+  {
+    "id": "agent.017",
+    "category": "降级",
+    "name": "天气服务失败不生成适宜性结论",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {"points": [], "error": "TJWeatherError"},
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "error",
+        "message_contains": ["无法获取天气数据"],
+        "message_not_contains": ["方案"]
+      }
+    ],
+    "expect_weather_calls": [[116.4, 39.9]]
+  },
+  {
+    "id": "agent.018",
+    "category": "降级",
+    "name": "无地点候选给出明确错误",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "不存在的城市",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {"results": [[]]},
+    "weather": {"points": []},
+    "steps": [
+      {"message": "完整计划", "expect_kind": "error", "message_contains": ["没有找到"]}
+    ],
+    "expect_no_weather_calls": true
+  },
+  {
+    "id": "agent.019",
+    "category": "决策依据",
+    "name": "无风险建议显示公开决策依据",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00", "rain": 0.0}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["决策依据", "未识别到明显天气风险"]
+      }
+    ]
+  },
+  {
+    "id": "agent.020",
+    "category": "决策依据",
+    "name": "有风险建议显示规则等级数值与单位",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {"name": "北京", "latitude": 39.9, "longitude": 116.4, "admin1": "北京市", "country": "中国", "timezone": "Asia/Shanghai"}
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00", "rain": 3.0}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["precipitation medium", "3.0 mm/hr", "方案一"]
+      }
+    ]
+  },
+  {
+    "id": "agent.021",
+    "category": "可信边界",
+    "name": "城市级近似坐标必须明确标注",
+    "now": "2026-08-05T08:00:00+08:00",
+    "extractor_updates": [
+      {
+        "activity_type": "cycling",
+        "location": "北京奥林匹克森林公园",
+        "start_time": "2026-08-08T08:00:00+08:00",
+        "duration_hours": 3
+      }
+    ],
+    "geocoder": {
+      "results": [
+        [
+          {
+            "name": "北京",
+            "latitude": 39.9,
+            "longitude": 116.4,
+            "admin1": "北京市",
+            "country": "中国",
+            "timezone": "Asia/Shanghai",
+            "is_approximate": true
+          }
+        ]
+      ]
+    },
+    "weather": {
+      "points": [{"time": "2026-08-08T08:00:00+08:00"}]
+    },
+    "steps": [
+      {
+        "message": "完整计划",
+        "expect_kind": "recommendation",
+        "message_contains": ["城市级近似", "决策依据"]
+      }
+    ]
+  }
+]

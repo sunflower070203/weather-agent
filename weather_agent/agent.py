@@ -66,17 +66,16 @@ class WeatherAgent:
                     "question", "请提供更具体的活动地点。", self.plan
                 )
 
-            selected_index = self._candidate_index(text)
-            if selected_index is not None:
-                selected = self.pending_locations[selected_index]
+            if text.startswith(PLAN_CHANGE_PREFIXES):
                 self.pending_locations = ()
-                return self._evaluate(selected)
-
-            if not text.startswith(PLAN_CHANGE_PREFIXES):
+                plan_was_modified = True
+            else:
+                selected_index = self._candidate_index(text)
+                if selected_index is not None:
+                    selected = self.pending_locations[selected_index]
+                    self.pending_locations = ()
+                    return self._evaluate(selected)
                 return self._location_choice_result(self.pending_locations)
-
-            self.pending_locations = ()
-            plan_was_modified = True
 
         self.plan = self.extractor.update_plan(self.plan, message, now=now)
         if not self.plan.is_ready():
