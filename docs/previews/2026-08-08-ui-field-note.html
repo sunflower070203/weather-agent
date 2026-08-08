@@ -37,7 +37,9 @@ body {
   position: relative;
   overflow: hidden;
   border-left: 8px solid var(--signal);
-  background: linear-gradient(100deg, rgba(255, 252, 244, .9), rgba(255, 252, 244, .55) 58%, rgba(207, 224, 232, .32));
+  background:
+    radial-gradient(circle at 84% 22%, rgba(242, 161, 90, .14), transparent 34%),
+    linear-gradient(100deg, rgba(255, 252, 244, .9), rgba(255, 252, 244, .55) 58%, rgba(207, 224, 232, .42));
   box-shadow: 0 18px 44px rgba(31, 74, 58, .10);
   border-radius: 12px 12px 4px 4px;
   padding: 26px 30px 20px;
@@ -45,16 +47,15 @@ body {
 }
 .hero-art {
   position: absolute;
-  top: 50%;
+  top: 18px;
   right: 18px;
-  transform: translateY(-50%);
-  height: 92px;
-  opacity: .9;
+  height: 128px;
+  opacity: .95;
   pointer-events: none;
 }
 .hero-art svg { height: 100%; width: auto; display: block; }
 .overline {
-  margin: 0 230px 6px 0;
+  margin: 0 300px 6px 0;
   font-family: var(--serif);
   font-size: .78rem;
   letter-spacing: .18em;
@@ -62,21 +63,21 @@ body {
   font-weight: 700;
 }
 .field-header h1 {
-  margin: 0 230px 0 0;
+  margin: 0 300px 0 0;
   font-family: var(--serif);
   font-size: 2.15rem;
   line-height: 1.15;
   color: var(--forest-deep);
   letter-spacing: .02em;
 }
-.tagline { margin: 8px 230px 0 0; max-width: 620px; color: var(--muted); font-size: .98rem; }
-.note { margin: 4px 230px 0 0; max-width: 620px; font-size: .86rem; color: var(--muted); }
+.tagline { margin: 8px 300px 0 0; max-width: 620px; color: var(--muted); font-size: .98rem; }
+.note { margin: 4px 300px 0 0; max-width: 620px; font-size: .86rem; color: var(--muted); }
 .expert-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 16px;
-  max-width: 68%;
+  margin-top: 18px;
+  max-width: 62%;
   position: relative;
   z-index: 1;
 }
