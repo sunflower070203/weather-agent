@@ -2,7 +2,11 @@ import os
 import unittest
 from unittest.mock import Mock
 
-from weather_agent.modelscope import ModelScopeClient, ModelScopeError
+from weather_agent.modelscope import (
+    ModelScopeClient,
+    ModelScopeContentError,
+    ModelScopeError,
+)
 
 
 class ModelScopeClientTests(unittest.TestCase):
@@ -56,6 +60,30 @@ class ModelScopeClientTests(unittest.TestCase):
         session.post.return_value = response
 
         with self.assertRaisesRegex(ModelScopeError, "valid JSON"):
+            ModelScopeClient("token", session=session).complete_json([])
+
+    def test_raises_content_error_when_model_content_is_not_json(self):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            "choices": [{"message": {"content": "不是 JSON"}}]
+        }
+        session = Mock()
+        session.post.return_value = response
+
+        with self.assertRaises(ModelScopeContentError):
+            ModelScopeClient("token", session=session).complete_json([])
+
+    def test_raises_content_error_when_model_content_is_not_object(self):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            "choices": [{"message": {"content": '"森林公园"'}}]
+        }
+        session = Mock()
+        session.post.return_value = response
+
+        with self.assertRaisesRegex(ModelScopeContentError, "must be an object"):
             ModelScopeClient("token", session=session).complete_json([])
 
 

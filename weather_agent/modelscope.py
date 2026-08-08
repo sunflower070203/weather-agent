@@ -12,6 +12,10 @@ class ModelScopeError(RuntimeError):
     """Raised when ModelScope cannot return a valid structured completion."""
 
 
+class ModelScopeContentError(ModelScopeError):
+    """Raised when ModelScope returns content that is not a JSON object."""
+
+
 class _UrlLibResponse:
     def __init__(self, response):
         self._response = response
@@ -73,7 +77,9 @@ class ModelScopeClient:
             content = response.json()["choices"][0]["message"]["content"]
             result = json_module.loads(content)
         except (KeyError, IndexError, TypeError, json_module.JSONDecodeError) as exc:
-            raise ModelScopeError("ModelScope did not return valid JSON content") from exc
+            raise ModelScopeContentError(
+                "ModelScope did not return valid JSON content"
+            ) from exc
         if not isinstance(result, dict):
-            raise ModelScopeError("ModelScope JSON content must be an object")
+            raise ModelScopeContentError("ModelScope JSON content must be an object")
         return result
