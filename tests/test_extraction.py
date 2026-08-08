@@ -3,6 +3,7 @@ from datetime import datetime
 
 from weather_agent.activity import ActivityPlan
 from weather_agent.extraction import ActivityExtractor, ActivityExtractionError
+from weather_agent.modelscope import ModelScopeContentError, ModelScopeError
 
 
 class ActivityExtractorTests(unittest.TestCase):
@@ -98,6 +99,29 @@ class ActivityExtractorTests(unittest.TestCase):
                 now=datetime.fromisoformat("2026-08-04T10:00:00+08:00"),
             )
 
+    def test_wraps_model_content_error_as_extraction_error(self):
+        plan = ActivityPlan(activity_type="cycling")
+        extractor = ActivityExtractor(_ContentErrorModel())
+
+        with self.assertRaisesRegex(ActivityExtractionError, "JSON object"):
+            extractor.update_plan(
+                plan,
+                "森林公园",
+                now=datetime.fromisoformat("2026-08-04T10:00:00+08:00"),
+            )
+
+        self.assertEqual(plan, ActivityPlan(activity_type="cycling"))
+
+    def test_does_not_wrap_service_model_error(self):
+        extractor = ActivityExtractor(_ServiceErrorModel())
+
+        with self.assertRaises(ModelScopeError):
+            extractor.update_plan(
+                ActivityPlan(),
+                "森林公园",
+                now=datetime.fromisoformat("2026-08-04T10:00:00+08:00"),
+            )
+
 
 class _FakeModel:
     def __init__(self, result):
@@ -107,6 +131,16 @@ class _FakeModel:
     def complete_json(self, messages):
         self.messages = messages
         return self.result
+
+
+class _ContentErrorModel:
+    def complete_json(self, messages):
+        raise ModelScopeContentError("ModelScope JSON content must be an object")
+
+
+class _ServiceErrorModel:
+    def complete_json(self, messages):
+        raise ModelScopeError("ModelScope HTTP error: 500")
 
 
 if __name__ == "__main__":

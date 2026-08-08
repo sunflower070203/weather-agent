@@ -1,6 +1,8 @@
 import json
 from dataclasses import asdict
 
+from weather_agent.modelscope import ModelScopeContentError
+
 
 ALLOWED_UPDATE_FIELDS = {
     "activity_type",
@@ -63,7 +65,10 @@ class ActivityExtractor:
                 ),
             },
         ]
-        extracted = self.model.complete_json(messages)
+        try:
+            extracted = self.model.complete_json(messages)
+        except ModelScopeContentError as exc:
+            raise ActivityExtractionError("model response must be a JSON object") from exc
         if not isinstance(extracted, dict):
             raise ActivityExtractionError("model response must be a JSON object")
         updates = {
