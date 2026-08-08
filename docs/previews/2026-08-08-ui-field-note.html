@@ -43,10 +43,18 @@ body {
   padding: 26px 30px 20px;
   animation: rise .5s ease-out both;
 }
-.hero-art { position: absolute; top: 0; right: 0; height: 100%; opacity: .85; pointer-events: none; }
+.hero-art {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+  height: 92px;
+  opacity: .9;
+  pointer-events: none;
+}
 .hero-art svg { height: 100%; width: auto; display: block; }
 .overline {
-  margin: 0 0 6px;
+  margin: 0 230px 6px 0;
   font-family: var(--serif);
   font-size: .78rem;
   letter-spacing: .18em;
@@ -54,16 +62,24 @@ body {
   font-weight: 700;
 }
 .field-header h1 {
-  margin: 0;
+  margin: 0 230px 0 0;
   font-family: var(--serif);
   font-size: 2.15rem;
   line-height: 1.15;
   color: var(--forest-deep);
   letter-spacing: .02em;
 }
-.tagline { margin: 8px 0 0; max-width: 620px; color: var(--muted); font-size: .98rem; }
-.note { margin: 4px 0 0; max-width: 620px; font-size: .86rem; color: var(--muted); }
-.expert-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.tagline { margin: 8px 230px 0 0; max-width: 620px; color: var(--muted); font-size: .98rem; }
+.note { margin: 4px 230px 0 0; max-width: 620px; font-size: .86rem; color: var(--muted); }
+.expert-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  max-width: 68%;
+  position: relative;
+  z-index: 1;
+}
 .stamp {
   font-family: var(--serif);
   font-weight: 700;
@@ -209,6 +225,9 @@ ul { margin: 6px 0; padding-left: 1.15em; }
 @media (max-width: 760px) {
   .workspace { grid-template-columns: 1fr; }
   .field-header h1 { font-size: 1.65rem; }
+  .hero-art { display: none; }
+  .overline, h1, .tagline, .note { margin-right: 0; }
+  .expert-badges { max-width: 100%; }
 }
 </style>
 </head>

@@ -51,12 +51,17 @@ APP_CSS = """
   margin: 0 0 18px;
 }
 #field-header .hero-art {
-  position: absolute; top: 0; right: 0; height: 100%;
-  opacity: .85; pointer-events: none;
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+  height: 92px;
+  opacity: .9;
+  pointer-events: none;
 }
 #field-header .hero-art svg { height: 100%; width: auto; display: block; }
 #field-header .overline {
-  margin: 0 0 6px;
+  margin: 0 230px 6px 0;
   font-family: var(--serif);
   font-size: .78rem;
   letter-spacing: .18em;
@@ -64,16 +69,24 @@ APP_CSS = """
   font-weight: 700;
 }
 #field-header h1 {
-  margin: 0;
+  margin: 0 230px 0 0;
   font-family: var(--serif);
   font-size: 2.1rem;
   line-height: 1.15;
   color: var(--forest-deep);
   letter-spacing: .02em;
 }
-#field-header .tagline { margin: 8px 0 0; max-width: 620px; color: var(--muted); font-size: .98rem; }
-#field-header .note { margin: 4px 0 0; max-width: 620px; font-size: .86rem; color: var(--muted); }
-#field-header .expert-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+#field-header .tagline { margin: 8px 230px 0 0; max-width: 620px; color: var(--muted); font-size: .98rem; }
+#field-header .note { margin: 4px 230px 0 0; max-width: 620px; font-size: .86rem; color: var(--muted); }
+#field-header .expert-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  max-width: 68%;
+  position: relative;
+  z-index: 1;
+}
 #field-header .stamp {
   font-family: var(--serif);
   font-weight: 700;
@@ -183,6 +196,14 @@ APP_CSS = """
   #chat-panel, #plan-panel { min-width: 100% !important; }
   #field-header h1 { font-size: 1.65rem; }
   #field-header .field-hero { padding: 20px 20px 16px; }
+  #field-header .hero-art { display: none; }
+  #field-header .overline,
+  #field-header h1,
+  #field-header .tagline,
+  #field-header .note {
+    margin-right: 0;
+  }
+  #field-header .expert-badges { max-width: 100%; }
 }
 """
 APP_THEME = gr.themes.Base(
