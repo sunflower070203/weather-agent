@@ -20,6 +20,9 @@ APP_CSS = """
   --fog: #f4f3eb;
   --signal: #e86f36;
   --ink: #18332c;
+  --paper: rgba(255, 255, 250, .92);
+  --line: rgba(23, 59, 50, .18);
+  --muted: #52665f;
 }
 .gradio-container {
   background:
@@ -28,41 +31,75 @@ APP_CSS = """
     var(--fog) !important;
   background-size: 32px 32px !important;
   color: var(--ink) !important;
+  font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", "Helvetica Neue", sans-serif !important;
+  animation: field-fade .4s ease-out;
+}
+@keyframes field-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 #field-header {
   border-left: 7px solid var(--signal);
-  padding: 12px 18px;
-  margin-bottom: 18px;
+  padding: 14px 18px 10px;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, rgba(232, 111, 54, .07), rgba(232, 111, 54, 0) 46%);
 }
 #field-header h1 { color: var(--forest-deep); letter-spacing: -.02em; }
-#field-header p { max-width: 760px; }
+#field-header p { max-width: 760px; color: var(--muted); }
+#expert-badges {
+  margin: 0 0 18px 25px;
+  padding: 8px 14px;
+  color: var(--forest-deep);
+  background: rgba(23, 59, 50, .05);
+  border: 1px dashed rgba(23, 59, 50, .28);
+  border-radius: 999px;
+  display: inline-block;
+  max-width: fit-content;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
 #workspace { gap: 18px; align-items: stretch; }
 #chat-panel, #plan-panel {
-  background: rgba(255, 255, 250, .88);
-  border: 1px solid rgba(23, 59, 50, .18);
+  background: var(--paper);
+  border: 1px solid var(--line);
   box-shadow: 0 14px 35px rgba(13, 41, 35, .08);
-  border-radius: 4px;
-  padding: 14px;
+  border-radius: 8px;
+  padding: 16px;
 }
 #plan-panel { border-top: 5px solid var(--forest); }
+#plan-summary {
+  border-left: 4px solid var(--signal);
+  background: rgba(232, 111, 54, .05);
+  padding: 10px 12px;
+  margin: 6px 0 14px;
+  border-radius: 0 6px 6px 0;
+}
 #capabilities {
   border-top: 1px solid rgba(23, 59, 50, .16);
   margin-top: 18px;
   padding-top: 12px;
 }
-#capabilities ul { padding-left: 1.2em; color: #52665f; }
+#capabilities ul { padding-left: 1.2em; color: var(--muted); line-height: 1.75; }
 #send-button { background: var(--signal) !important; color: white !important; }
+#send-button:hover { filter: brightness(1.06); }
 #reset-button { border-color: var(--forest) !important; color: var(--forest) !important; }
+#reset-button:hover { background: rgba(23, 59, 50, .08) !important; }
 .data-note {
   margin-top: 18px;
-  color: #52665f;
+  color: var(--muted);
   font-size: .88rem;
   border-top: 1px solid rgba(23, 59, 50, .16);
   padding-top: 12px;
 }
+#chat-panel ::-webkit-scrollbar, #plan-panel ::-webkit-scrollbar { width: 8px; }
+#chat-panel ::-webkit-scrollbar-thumb, #plan-panel ::-webkit-scrollbar-thumb {
+  background: rgba(23, 59, 50, .25);
+  border-radius: 999px;
+}
 @media (max-width: 760px) {
   #workspace { flex-direction: column !important; }
   #chat-panel, #plan-panel { min-width: 100% !important; }
+  #expert-badges { margin-left: 18px; }
 }
 """
 APP_THEME = gr.themes.Base(
@@ -160,6 +197,10 @@ def build_app(*, version=None):
 """,
             elem_id="field-header",
         )
+        gr.Markdown(
+            "🌦️ 气象顾问　·　🦺 户外安全顾问　·　🎒 装备与补给顾问",
+            elem_id="expert-badges",
+        )
 
         with gr.Row(elem_id="workspace"):
             with gr.Column(scale=7, elem_id="chat-panel"):
@@ -180,7 +221,7 @@ def build_app(*, version=None):
                 reset = gr.Button("重新开始", variant="secondary", elem_id="reset-button")
             with gr.Column(scale=3, min_width=280, elem_id="plan-panel"):
                 gr.Markdown("### 当前活动计划")
-                plan_summary = gr.Markdown(EMPTY_PLAN)
+                plan_summary = gr.Markdown(EMPTY_PLAN, elem_id="plan-summary")
                 gr.Markdown(
                     """
 ### 使用提示
@@ -195,19 +236,19 @@ def build_app(*, version=None):
                     """
 ### 已启用能力
 
-- 自然语言理解：解析口语活动描述
-- 多轮状态：逐项追问并保留活动计划
-- 天气工具：中科天机逐小时真实数据
-- 风险规则：降雨、大风、高温、低温确定性判断
-- 知识库建议：19 条带来源的活动建议
-- 风险偏好：保守、适中、冒险口径
-- 边界：城市级近似，不替代官方预警
+- 🧠 自然语言理解：解析口语活动描述
+- 🔄 多轮状态：逐项追问并保留活动计划
+- 🌤️ 天气工具：中科天机逐小时真实数据
+- ⚠️ 风险规则：降雨、大风、高温、低温确定性判断
+- 📚 知识库建议：19 条带来源的活动建议
+- 🎯 风险偏好：保守、适中、冒险口径
+- 📍 边界：城市级近似，不替代官方预警
 
 ### 已启用专家技能
 
-- 气象顾问：把时段天气翻译成通俗影响并给出决策依据
-- 户外安全顾问：风险结论、方案取舍与应急预案
-- 装备与补给顾问：按活动与风险给出装备建议（带知识库来源）
+- 🌦️ 气象顾问：把时段天气翻译成通俗影响并给出决策依据
+- 🦺 户外安全顾问：风险结论、方案取舍与应急预案
+- 🎒 装备与补给顾问：按活动与风险给出装备建议（带知识库来源）
 """,
                     elem_id="capabilities",
                 )

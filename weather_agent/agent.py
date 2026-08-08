@@ -210,4 +210,4 @@ class WeatherAgent:
             rendered = expert.render(context)
             if rendered:
                 sections.append(rendered)
-        return "\n\n".join(sections)
+        return "\n\n---\n\n".join(sections)
