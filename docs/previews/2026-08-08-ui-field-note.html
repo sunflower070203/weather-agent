@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>户外天气决策 Agent · UI 预览（B2 登山手帐）</title>
+<style>
+:root {
+  --paper: #f5efe1;
+  --paper-deep: #efe7d4;
+  --ink: #2b2722;
+  --forest: #1f4a3a;
+  --forest-deep: #143026;
+  --signal: #e2622b;
+  --muted: #7c7261;
+  --sky: #cfe0e8;
+  --serif: "Songti SC", "STSong", "Noto Serif SC", "SimSun", serif;
+  --sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(226, 98, 43, .07), transparent 34%),
+    radial-gradient(circle at 88% 92%, rgba(31, 74, 58, .07), transparent 40%),
+    repeating-linear-gradient(0deg, rgba(43, 39, 34, .028) 0 1px, transparent 1px 26px),
+    var(--paper);
+  min-height: 100vh;
+  padding: 34px 22px 48px;
+}
+.page { max-width: 1120px; margin: 0 auto; }
+
+/* ---------- hero ---------- */
+.field-header {
+  position: relative;
+  overflow: hidden;
+  border-left: 8px solid var(--signal);
+  background: linear-gradient(100deg, rgba(255, 252, 244, .9), rgba(255, 252, 244, .55) 58%, rgba(207, 224, 232, .32));
+  box-shadow: 0 18px 44px rgba(31, 74, 58, .10);
+  border-radius: 12px 12px 4px 4px;
+  padding: 26px 30px 20px;
+  animation: rise .5s ease-out both;
+}
+.hero-art { position: absolute; top: 0; right: 0; height: 100%; opacity: .85; pointer-events: none; }
+.hero-art svg { height: 100%; width: auto; display: block; }
+.overline {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-size: .78rem;
+  letter-spacing: .18em;
+  color: var(--signal);
+  font-weight: 700;
+}
+.field-header h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2.15rem;
+  line-height: 1.15;
+  color: var(--forest-deep);
+  letter-spacing: .02em;
+}
+.tagline { margin: 8px 0 0; max-width: 620px; color: var(--muted); font-size: .98rem; }
+.note { margin: 4px 0 0; max-width: 620px; font-size: .86rem; color: var(--muted); }
+.expert-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.stamp {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: .9rem;
+  color: var(--forest-deep);
+  background: rgba(255, 252, 244, .72);
+  border: 1.5px dashed var(--forest);
+  border-radius: 999px;
+  padding: 6px 14px;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 2px 0 rgba(31, 74, 58, .08);
+}
+.stamp:nth-child(2) { transform: rotate(.8deg); border-color: var(--signal); }
+.stamp:nth-child(3) { transform: rotate(-.6deg); }
+
+/* ---------- workspace ---------- */
+.workspace {
+  display: grid;
+  grid-template-columns: 7fr 3fr;
+  gap: 18px;
+  margin-top: 18px;
+  align-items: stretch;
+  animation: rise .5s ease-out .12s both;
+}
+.panel {
+  position: relative;
+  background: rgba(255, 252, 244, .86);
+  border: 1px solid rgba(43, 39, 34, .13);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .65), 0 18px 44px rgba(31, 74, 58, .10);
+  padding: 22px 22px 18px;
+}
+.panel::before {
+  content: "";
+  position: absolute;
+  top: -12px; left: 50%;
+  width: 96px; height: 26px;
+  transform: translateX(-50%) rotate(-1.6deg);
+  background: rgba(226, 98, 43, .15);
+  border: 1px dashed rgba(43, 39, 34, .22);
+  border-radius: 3px;
+}
+.panel h3 {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--forest-deep);
+  letter-spacing: .04em;
+}
+.chat-messages {
+  background:
+    repeating-linear-gradient(0deg, rgba(43, 39, 34, .035) 0 1px, transparent 1px 27px),
+    rgba(255, 253, 248, .78);
+  border: 1px solid rgba(43, 39, 34, .1);
+  border-radius: 8px;
+  padding: 12px;
+  height: 320px;
+  overflow: auto;
+  font-size: .9rem;
+  line-height: 1.55;
+}
+.chat-messages p { margin: 4px 0; }
+.chat-messages hr { border: none; border-top: 1px dashed rgba(31, 74, 58, .35); margin: 10px 0; }
+.msg-user, .msg-bot { border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+.msg-user { background: rgba(31, 74, 58, .1); text-align: right; }
+.msg-bot { background: rgba(255, 252, 244, .92); }
+.msg-bot strong { color: var(--signal); font-family: var(--serif); }
+.input-row { display: flex; gap: 8px; margin-top: 12px; }
+.input-row input {
+  flex: 1;
+  border: 1px solid rgba(43, 39, 34, .2);
+  border-radius: 8px;
+  padding: 9px 12px;
+  background: rgba(255, 253, 248, .9);
+  font-family: var(--sans);
+  color: var(--ink);
+}
+.send {
+  background: var(--signal);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .15s ease, transform .1s ease;
+}
+.send:hover { filter: brightness(1.07); }
+.send:active { transform: scale(.97); }
+.reset {
+  margin-top: 8px;
+  background: transparent;
+  color: var(--forest);
+  border: 1px solid var(--forest);
+  border-radius: 8px;
+  padding: 7px 16px;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+.reset:hover { background: rgba(31, 74, 58, .08); }
+.plan-card {
+  position: relative;
+  background: rgba(255, 253, 248, .92);
+  border-left: 4px solid var(--signal);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-size: .9rem;
+  line-height: 1.7;
+}
+.plan-stamp {
+  position: absolute;
+  top: 10px; right: 12px;
+  font-family: var(--serif);
+  font-size: .68rem;
+  letter-spacing: .16em;
+  color: rgba(226, 98, 43, .75);
+  border: 1px solid rgba(226, 98, 43, .45);
+  border-radius: 3px;
+  padding: 2px 7px;
+  transform: rotate(5deg);
+}
+.tips, .capabilities { font-size: .86rem; color: var(--muted); line-height: 1.85; }
+.capabilities { border-top: 1px dashed rgba(43, 39, 34, .16); margin-top: 18px; padding-top: 12px; }
+.capabilities h3 { font-size: .98rem; margin-top: 14px; }
+ul { margin: 6px 0; padding-left: 1.15em; }
+
+/* ---------- footer ---------- */
+.foot {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: .84rem;
+  border-top: 1px solid rgba(43, 39, 34, .14);
+  padding-top: 12px;
+  animation: rise .5s ease-out .22s both;
+}
+.foot .version { font-family: var(--sans); color: var(--muted); margin-top: 4px; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 760px) {
+  .workspace { grid-template-columns: 1fr; }
+  .field-header h1 { font-size: 1.65rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="field-header">
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 460 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#dcebef"/><stop offset="1" stop-color="#f3ead6"/>
+          </linearGradient>
+        </defs>
+        <rect width="460" height="200" fill="url(#sky)"/>
+        <circle cx="368" cy="58" r="26" fill="#f2a15a" opacity=".92"/>
+        <path d="M0 150 L118 74 L210 142 L286 96 L380 150 L460 118 L460 200 L0 200 Z" fill="#3f6b58" opacity=".9"/>
+        <path d="M0 200 L0 170 L96 116 L168 164 L252 128 L344 178 L460 140 L460 200 Z" fill="#1f4a3a" opacity=".95"/>
+      </svg>
+    </div>
+    <p class="overline">OUTDOOR WEATHER NOTE · 户外天气手帐</p>
+    <h1>户外天气决策 Agent</h1>
+    <p class="tagline">把逐小时天气转化为可执行的骑行、徒步与露营建议。</p>
+    <p class="note">数据驱动的辅助判断，不替代气象部门预警和现场安全决策。</p>
+    <div class="expert-badges">
+      <span class="stamp">🌦️ 气象顾问</span>
+      <span class="stamp">🦺 户外安全顾问</span>
+      <span class="stamp">🎒 装备与补给顾问</span>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="panel chat-panel">
+      <h3>决策对话</h3>
+      <div class="chat-messages">
+        <p class="msg-user">8月12日上午8点在北京骑行4小时</p>
+        <div class="msg-bot">
+          <p><strong>气象顾问</strong><br>时段概况：08月12日 08:00-12:00，气温 28.0-28.0°C，最高降水 4.0 mm/hr<br>通俗解读：活动时段内降雨风险为中等：路面湿滑、能见度下降，雨具与防滑措施要提前备好。</p>
+          <hr>
+          <p><strong>户外安全顾问</strong><br>结论：检测到天气风险：precipitation medium：4.0 mm/hr。<br>方案一：调整活动时间，避开风险较高的时段后重新查询。<br>方案二：携带雨具并避开积水路段，缩短暴露时间；若风险持续则取消活动。</p>
+          <hr>
+          <p><strong>装备与补给顾问</strong><br>雨天骑行备好雨衣，预留更长刹车距离，注意积水与井盖。（知识库#gear-rain-cycling）</p>
+        </div>
+      </div>
+      <div class="input-row">
+        <input placeholder="例如：明天上午8点在北京骑行3小时">
+        <button class="send">分析计划</button>
+      </div>
+      <button class="reset">重新开始</button>
+    </section>
+
+    <aside class="panel plan-panel">
+      <h3>当前活动计划</h3>
+      <div class="plan-card">
+        <span class="plan-stamp">PLAN</span>
+        <p><strong>活动</strong>：骑行</p>
+        <p><strong>地点</strong>：北京</p>
+        <p><strong>开始</strong>：2026-08-12T08:00:00+08:00</p>
+        <p><strong>时长</strong>：4 小时</p>
+      </div>
+      <h3>使用提示</h3>
+      <ul class="tips">
+        <li>地点出现多个候选时，可回复“2”“第二个”或“选北京那个”。</li>
+        <li>候选都不合适时回复“都不是”；输入“重新开始”可清空计划。</li>
+        <li>具体公园可能采用城市级天气坐标，结果会明确标注。</li>
+        <li>修改时间或地点后，Agent 会重新查询并评估。</li>
+      </ul>
+      <div class="capabilities">
+        <h3>已启用能力</h3>
+        <ul>
+          <li>🧠 自然语言理解：解析口语活动描述</li>
+          <li>🔄 多轮状态：逐项追问并保留活动计划</li>
+          <li>🌤️ 天气工具：中科天机逐小时真实数据</li>
+          <li>⚠️ 风险规则：降雨、大风、高温、低温确定性判断</li>
+          <li>📚 知识库建议：19 条带来源的活动建议</li>
+          <li>🎯 风险偏好：保守、适中、冒险口径</li>
+          <li>📍 边界：城市级近似，不替代官方预警</li>
+        </ul>
+        <h3>已启用专家技能</h3>
+        <ul>
+          <li>🌦️ 气象顾问：时段天气翻译与决策依据</li>
+          <li>🦺 户外安全顾问：风险结论与方案取舍</li>
+          <li>🎒 装备与补给顾问：装备建议（带来源）</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <p>天机天气提供逐小时气象数据；Open-Meteo 用于城市地理编码。城市级近似不能代表山地、峡谷或水域的局地天气。</p>
+    <p class="version">运行版本：`ui-preview-b2`</p>
+  </footer>
+</div>
+</body>
+</html>

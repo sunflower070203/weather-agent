@@ -15,91 +15,174 @@ ACTIVITY_NAMES = {"cycling": "骑行", "hiking": "徒步", "camping": "露营"}
 DEFAULT_APP_VERSION = "submission-2026-08-07"
 APP_CSS = """
 :root {
-  --forest: #173b32;
-  --forest-deep: #0d2923;
-  --fog: #f4f3eb;
-  --signal: #e86f36;
-  --ink: #18332c;
-  --paper: rgba(255, 255, 250, .92);
-  --line: rgba(23, 59, 50, .18);
-  --muted: #52665f;
+  --paper: #f5efe1;
+  --paper-deep: #efe7d4;
+  --ink: #2b2722;
+  --forest: #1f4a3a;
+  --forest-deep: #143026;
+  --signal: #e2622b;
+  --muted: #7c7261;
+  --serif: "Songti SC", "STSong", "Noto Serif SC", "SimSun", serif;
 }
 .gradio-container {
   background:
-    linear-gradient(rgba(23, 59, 50, .035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 59, 50, .035) 1px, transparent 1px),
-    var(--fog) !important;
-  background-size: 32px 32px !important;
+    radial-gradient(circle at 12% 8%, rgba(226, 98, 43, .07), transparent 34%),
+    radial-gradient(circle at 88% 92%, rgba(31, 74, 58, .07), transparent 40%),
+    repeating-linear-gradient(0deg, rgba(43, 39, 34, .028) 0 1px, transparent 1px 26px),
+    var(--paper) !important;
   color: var(--ink) !important;
   font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", "Helvetica Neue", sans-serif !important;
-  animation: field-fade .4s ease-out;
 }
-@keyframes field-fade {
-  from { opacity: 0; transform: translateY(4px); }
+@keyframes field-rise {
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 #field-header {
-  border-left: 7px solid var(--signal);
-  padding: 14px 18px 10px;
-  margin-bottom: 10px;
-  background: linear-gradient(90deg, rgba(232, 111, 54, .07), rgba(232, 111, 54, 0) 46%);
+  animation: field-rise .5s ease-out both;
 }
-#field-header h1 { color: var(--forest-deep); letter-spacing: -.02em; }
-#field-header p { max-width: 760px; color: var(--muted); }
-#expert-badges {
-  margin: 0 0 18px 25px;
-  padding: 8px 14px;
+#field-header .field-hero {
+  position: relative;
+  overflow: hidden;
+  border-left: 8px solid var(--signal);
+  background: linear-gradient(100deg, rgba(255, 252, 244, .9), rgba(255, 252, 244, .55) 58%, rgba(207, 224, 232, .32));
+  box-shadow: 0 18px 44px rgba(31, 74, 58, .10);
+  border-radius: 12px 12px 4px 4px;
+  padding: 26px 30px 20px;
+  margin: 0 0 18px;
+}
+#field-header .hero-art {
+  position: absolute; top: 0; right: 0; height: 100%;
+  opacity: .85; pointer-events: none;
+}
+#field-header .hero-art svg { height: 100%; width: auto; display: block; }
+#field-header .overline {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-size: .78rem;
+  letter-spacing: .18em;
+  color: var(--signal);
+  font-weight: 700;
+}
+#field-header h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2.1rem;
+  line-height: 1.15;
   color: var(--forest-deep);
-  background: rgba(23, 59, 50, .05);
-  border: 1px dashed rgba(23, 59, 50, .28);
-  border-radius: 999px;
-  display: inline-block;
-  max-width: fit-content;
-  font-weight: 600;
   letter-spacing: .02em;
 }
-#workspace { gap: 18px; align-items: stretch; }
-#chat-panel, #plan-panel {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  box-shadow: 0 14px 35px rgba(13, 41, 35, .08);
-  border-radius: 8px;
-  padding: 16px;
+#field-header .tagline { margin: 8px 0 0; max-width: 620px; color: var(--muted); font-size: .98rem; }
+#field-header .note { margin: 4px 0 0; max-width: 620px; font-size: .86rem; color: var(--muted); }
+#field-header .expert-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+#field-header .stamp {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: .9rem;
+  color: var(--forest-deep);
+  background: rgba(255, 252, 244, .72);
+  border: 1.5px dashed var(--forest);
+  border-radius: 999px;
+  padding: 6px 14px;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 2px 0 rgba(31, 74, 58, .08);
 }
-#plan-panel { border-top: 5px solid var(--forest); }
+#field-header .stamp:nth-child(2) { transform: rotate(.8deg); border-color: var(--signal); }
+#field-header .stamp:nth-child(3) { transform: rotate(-.6deg); }
+#workspace {
+  gap: 18px;
+  align-items: stretch;
+  animation: field-rise .5s ease-out .12s both;
+}
+#chat-panel, #plan-panel {
+  position: relative;
+  background: rgba(255, 252, 244, .86);
+  border: 1px solid rgba(43, 39, 34, .13);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .65), 0 18px 44px rgba(31, 74, 58, .10);
+  padding: 22px 22px 18px;
+}
+#chat-panel::before, #plan-panel::before {
+  content: "";
+  position: absolute;
+  top: -12px; left: 50%;
+  width: 96px; height: 26px;
+  transform: translateX(-50%) rotate(-1.6deg);
+  background: rgba(226, 98, 43, .15);
+  border: 1px dashed rgba(43, 39, 34, .22);
+  border-radius: 3px;
+  pointer-events: none;
+}
+#plan-panel h3, #capabilities h3 {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--forest-deep);
+  letter-spacing: .04em;
+}
+#capabilities h3 { margin-top: 14px; font-size: .98rem; }
 #plan-summary {
+  position: relative;
+  background: rgba(255, 253, 248, .92);
   border-left: 4px solid var(--signal);
-  background: rgba(232, 111, 54, .05);
-  padding: 10px 12px;
-  margin: 6px 0 14px;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin: 6px 0 18px;
+  font-size: .9rem;
+  line-height: 1.7;
+}
+#plan-summary::after {
+  content: "PLAN";
+  position: absolute;
+  top: 10px; right: 12px;
+  font-family: var(--serif);
+  font-size: .68rem;
+  letter-spacing: .16em;
+  color: rgba(226, 98, 43, .75);
+  border: 1px solid rgba(226, 98, 43, .45);
+  border-radius: 3px;
+  padding: 2px 7px;
+  transform: rotate(5deg);
 }
 #capabilities {
-  border-top: 1px solid rgba(23, 59, 50, .16);
+  border-top: 1px dashed rgba(43, 39, 34, .16);
   margin-top: 18px;
   padding-top: 12px;
 }
-#capabilities ul { padding-left: 1.2em; color: var(--muted); line-height: 1.75; }
-#send-button { background: var(--signal) !important; color: white !important; }
-#send-button:hover { filter: brightness(1.06); }
-#reset-button { border-color: var(--forest) !important; color: var(--forest) !important; }
-#reset-button:hover { background: rgba(23, 59, 50, .08) !important; }
+#capabilities ul { padding-left: 1.2em; color: var(--muted); line-height: 1.85; }
+#send-button {
+  background: var(--signal) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  transition: filter .15s ease, transform .1s ease !important;
+}
+#send-button:hover { filter: brightness(1.07) !important; }
+#send-button:active { transform: scale(.97) !important; }
+#reset-button {
+  border: 1px solid var(--forest) !important;
+  color: var(--forest) !important;
+  background: transparent !important;
+  border-radius: 8px !important;
+}
+#reset-button:hover { background: rgba(31, 74, 58, .08) !important; }
 .data-note {
   margin-top: 18px;
   color: var(--muted);
-  font-size: .88rem;
-  border-top: 1px solid rgba(23, 59, 50, .16);
+  font-size: .86rem;
+  border-top: 1px solid rgba(43, 39, 34, .14);
   padding-top: 12px;
+  animation: field-rise .5s ease-out .22s both;
 }
 #chat-panel ::-webkit-scrollbar, #plan-panel ::-webkit-scrollbar { width: 8px; }
 #chat-panel ::-webkit-scrollbar-thumb, #plan-panel ::-webkit-scrollbar-thumb {
-  background: rgba(23, 59, 50, .25);
+  background: rgba(43, 39, 34, .22);
   border-radius: 999px;
 }
 @media (max-width: 760px) {
   #workspace { flex-direction: column !important; }
   #chat-panel, #plan-panel { min-width: 100% !important; }
-  #expert-badges { margin-left: 18px; }
+  #field-header h1 { font-size: 1.65rem; }
+  #field-header .field-hero { padding: 20px 20px 16px; }
 }
 """
 APP_THEME = gr.themes.Base(
@@ -188,18 +271,34 @@ def build_app(*, version=None):
     version = version or get_app_version()
     with gr.Blocks(title="户外天气决策 Agent") as demo:
         agent_state = gr.State(None)
-        gr.Markdown(
+        gr.HTML(
             """
-# 户外天气决策 Agent
-
-把逐小时天气转化为可执行的骑行、徒步与露营建议。
-**数据驱动的辅助判断，不替代气象部门预警和现场安全决策。**
+<div class="field-hero">
+  <div class="hero-art" aria-hidden="true">
+    <svg viewBox="0 0 460 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#dcebef"/><stop offset="1" stop-color="#f3ead6"/>
+        </linearGradient>
+      </defs>
+      <rect width="460" height="200" fill="url(#sky)"/>
+      <circle cx="368" cy="58" r="26" fill="#f2a15a" opacity=".92"/>
+      <path d="M0 150 L118 74 L210 142 L286 96 L380 150 L460 118 L460 200 L0 200 Z" fill="#3f6b58" opacity=".9"/>
+      <path d="M0 200 L0 170 L96 116 L168 164 L252 128 L344 178 L460 140 L460 200 Z" fill="#1f4a3a" opacity=".95"/>
+    </svg>
+  </div>
+  <p class="overline">OUTDOOR WEATHER NOTE · 户外天气手帐</p>
+  <h1>户外天气决策 Agent</h1>
+  <p class="tagline">把逐小时天气转化为可执行的骑行、徒步与露营建议。</p>
+  <p class="note">数据驱动的辅助判断，不替代气象部门预警和现场安全决策。</p>
+  <div class="expert-badges">
+    <span class="stamp">🌦️ 气象顾问</span>
+    <span class="stamp">🦺 户外安全顾问</span>
+    <span class="stamp">🎒 装备与补给顾问</span>
+  </div>
+</div>
 """,
             elem_id="field-header",
-        )
-        gr.Markdown(
-            "🌦️ 气象顾问　·　🦺 户外安全顾问　·　🎒 装备与补给顾问",
-            elem_id="expert-badges",
         )
 
         with gr.Row(elem_id="workspace"):
